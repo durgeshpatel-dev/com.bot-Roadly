@@ -1,7 +1,7 @@
 import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme, type ThemePreference } from '../../context/ThemeContext';
 import { Button } from '../ui/button';
-import { Menu, MenuGroupLabel, MenuPopup, MenuRadioGroup, MenuRadioItem, MenuTrigger } from '../ui/menu';
+import { Menu, MenuGroup, MenuGroupLabel, MenuPopup, MenuRadioGroup, MenuRadioItem, MenuTrigger } from '../ui/menu';
 
 const options = [
   { value: 'system' as const, label: 'System', Icon: Monitor },
@@ -20,6 +20,7 @@ export function ThemeToggle() {
         <CurrentIcon aria-hidden="true" />
       </MenuTrigger>
       <MenuPopup align="end" className="min-w-36">
+        <MenuGroup>
         <MenuGroupLabel>Theme</MenuGroupLabel>
         <MenuRadioGroup value={preference} onValueChange={(value) => setPreference(value as ThemePreference)}>
           {options.map(({ value, label, Icon }) => (
@@ -31,6 +32,7 @@ export function ThemeToggle() {
             </MenuRadioItem>
           ))}
         </MenuRadioGroup>
+        </MenuGroup>
       </MenuPopup>
     </Menu>
   );

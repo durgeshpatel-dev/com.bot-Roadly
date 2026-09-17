@@ -2,11 +2,7 @@ import mongoose from 'mongoose';
 import { env } from './env';
 
 export const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(env.MONGODB_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error('Error connecting to MongoDB:', error);
-    process.exit(1);
-  }
+  await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+  // Ensure required unique/text indexes exist before serving requests.
+  await Promise.all(Object.values(mongoose.models).map(model => model.init()));
 };

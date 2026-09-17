@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import type { IComment } from '../../api/commentApi';
 import { useAuth } from '../../context/AuthContext';
-import { useComments } from '../../hooks/useComments';
+import { useCommentMutations } from '../../hooks/useComments';
 import { CommentForm } from './CommentForm';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback } from '../ui/avatar';
-import ReactMarkdown from 'react-markdown';
+import { MarkdownPreview } from '../posts/MarkdownPreview';
 import { formatDistanceToNow } from 'date-fns';
 import {
   AlertDialog,
@@ -20,13 +20,11 @@ import {
 
 export function CommentItem({ comment, postId, depth = 0 }: { comment: IComment; postId: string; depth: number }) {
   const { user } = useAuth();
-  const { updateComment, deleteComment, createComment, isUpdating, isCreating } = useComments(postId);
+  const { updateComment, deleteComment, createComment, isUpdating, isCreating } = useCommentMutations(postId);
   
   const [isEditing, setIsEditing] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
 
-  // Fallback to '[deleted]' if author is null (just in case) or if we wanted to obscure it,
-  // but requirements said to keep author relation.
   const authorName = comment.author?.name || 'Unknown';
   
   const isAuthor = user?._id === comment.author?._id;
@@ -42,7 +40,7 @@ export function CommentItem({ comment, postId, depth = 0 }: { comment: IComment;
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="font-medium text-sm">
+            <span className="wrap-anywhere font-medium text-sm">
               {authorName}
             </span>
             <span className="text-xs text-muted-foreground">
@@ -82,8 +80,8 @@ export function CommentItem({ comment, postId, depth = 0 }: { comment: IComment;
           <CommentForm
             initialValue={comment.content}
             isLoading={isUpdating}
-            onSubmit={(content) => {
-              updateComment({ commentId: comment._id, content });
+            onSubmit={async (content) => {
+              await updateComment({ commentId: comment._id, content });
               setIsEditing(false);
             }}
             onCancel={() => setIsEditing(false)}
@@ -93,7 +91,7 @@ export function CommentItem({ comment, postId, depth = 0 }: { comment: IComment;
             {comment.isDeleted ? (
               <p className="italic text-muted-foreground">[deleted]</p>
             ) : (
-              <ReactMarkdown>{comment.content}</ReactMarkdown>
+              <MarkdownPreview description={comment.content} full />
             )}
           </div>
         )}
@@ -109,8 +107,8 @@ export function CommentItem({ comment, postId, depth = 0 }: { comment: IComment;
             <CommentForm
               isLoading={isCreating}
               placeholder="Write a reply..."
-              onSubmit={(content) => {
-                createComment({ content, parentComment: comment._id });
+              onSubmit={async (content) => {
+                await createComment({ content, parentComment: comment._id });
                 setIsReplying(false);
               }}
               onCancel={() => setIsReplying(false)}

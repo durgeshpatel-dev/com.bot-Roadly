@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { Comment, IComment } from '../models/Comment';
+import { Comment } from '../models/Comment';
+import { paginationQuerySchema } from '../middleware/validations/post.validation';
 import { Post } from '../models/Post';
 import { AppError } from '../utils/AppError';
 import { activityService } from './activity.service';
@@ -43,19 +44,25 @@ export class CommentService {
 
     await comment.save();
 
-    await Post.updateOne({ _id: postId }, { $inc: { commentCount: 1 } });
+    const counted = await Post.updateOne({ _id: postId }, { $inc: { commentCount: 1 } });
+    if (!counted.matchedCount) {
+      await Comment.deleteOne({ _id: comment._id });
+      throw new AppError('Post not found', 404);
+    }
     await activityService.record({ postId, type: 'comment-created', actorId: userId }).catch(() => undefined);
 
     return comment.populate('author', 'name _id');
   }
 
-  async getCommentsByPost(postId: string, query: any) {
+  async getCommentsByPost(postId: string, rawQuery: Record<string, unknown>) {
     if (!mongoose.Types.ObjectId.isValid(postId)) {
       throw new AppError('Invalid post ID', 400);
     }
 
-    const page = Math.max(1, parseInt(query.page) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(query.limit) || 20));
+    const query = paginationQuerySchema.strict().parse(rawQuery);
+    if (!await Post.exists({ _id: postId })) throw new AppError('Post not found', 404);
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 20);
     const skip = (page - 1) * limit;
 
     const [rootComments, totalRoot] = await Promise.all([
@@ -130,11 +137,11 @@ export class CommentService {
       throw new AppError('Not authorized to edit this comment', 403);
     }
 
-    comment.content = content;
-    comment.isEdited = true;
-
-    await comment.save();
-    return comment.populate('author', 'name _id');
+    const updated = await Comment.findOneAndUpdate({ _id: commentId, isDeleted: false }, {
+      $set: { content, isEdited: true },
+    }, { returnDocument: 'after', runValidators: true }).populate('author', 'name _id');
+    if (!updated) throw new AppError('Cannot edit a deleted comment', 400);
+    return updated;
   }
 
   async deleteComment(commentId: string, userId: string, userRole: string) {
@@ -148,18 +155,16 @@ export class CommentService {
       throw new AppError('Comment not found', 404);
     }
 
-    if (comment.isDeleted) {
-      return true; // Idempotent
-    }
-
     if (comment.author.toString() !== userId && userRole !== 'admin') {
       throw new AppError('Not authorized to delete this comment', 403);
     }
 
-    comment.isDeleted = true;
-    await comment.save();
-
-    await Post.updateOne({ _id: comment.post }, { $inc: { commentCount: -1 } });
+    const deleted = await Comment.updateOne({ _id: commentId, isDeleted: false }, {
+      $set: { isDeleted: true, content: '[deleted]' },
+    });
+    if (deleted.modifiedCount) {
+      await Post.updateOne({ _id: comment.post, commentCount: { $gt: 0 } }, { $inc: { commentCount: -1 } });
+    }
 
     return true;
   }

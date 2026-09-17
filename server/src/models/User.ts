@@ -7,6 +7,7 @@ export interface IUser extends Document {
   password?: string;
   role: 'user' | 'admin';
   isVerified: boolean;
+  authVersion: number;
   verificationToken?: string;
   verificationTokenExpiry?: Date;
   resetPasswordToken?: string;
@@ -48,16 +49,19 @@ const userSchema = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    authVersion: { type: Number, default: 0, min: 0, select: false },
     verificationToken: {
       type: String,
       index: { unique: true, sparse: true },
+      select: false,
     },
-    verificationTokenExpiry: Date,
+    verificationTokenExpiry: { type: Date, select: false },
     resetPasswordToken: {
       type: String,
       index: { unique: true, sparse: true },
+      select: false,
     },
-    resetPasswordTokenExpiry: Date,
+    resetPasswordTokenExpiry: { type: Date, select: false },
   },
   {
     timestamps: true,

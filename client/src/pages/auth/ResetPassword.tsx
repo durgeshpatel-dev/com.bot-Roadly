@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiErrorMessage } from '../../lib/api-error';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,7 +14,7 @@ import { CheckCircle2 } from 'lucide-react';
 
 const resetPasswordSchema = z
   .object({
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    password: z.string().min(8, 'Password must be at least 8 characters').refine(value => new TextEncoder().encode(value).length <= 72, 'Password must be at most 72 UTF-8 bytes'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -46,17 +47,15 @@ export default function ResetPassword() {
       setError(null);
       await authApi.resetPassword({ token, password: data.password });
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message || 'Failed to reset password. The link might be expired.');
+    } catch (err: unknown) {
+      setError(apiErrorMessage(err, 'Failed to reset password. The link might be expired.'));
     }
   };
 
   if (!token) {
     return (
       <AuthPanel title="Invalid request" description="The password reset link is missing or malformed.">
-          <Link to="/forgot-password" className="block w-full">
-            <Button className="w-full">Request new link</Button>
-          </Link>
+          <Button className="w-full" render={<Link to="/forgot-password" />}>Request new link</Button>
       </AuthPanel>
     );
   }
@@ -68,9 +67,7 @@ export default function ResetPassword() {
             <CheckCircle2 aria-hidden="true" />
           </div>
           <p className="text-center text-muted-foreground">Your password has been successfully reset.</p>
-          <Link to="/login" className="block w-full">
-            <Button className="w-full">Continue to login</Button>
-          </Link>
+          <Button className="w-full" render={<Link to="/login" />}>Continue to login</Button>
       </AuthPanel>
     );
   }
@@ -91,9 +88,9 @@ export default function ResetPassword() {
                 id="password"
                 type="password"
                 autoComplete="new-password"
-                {...register('password')}
+                aria-invalid={!!errors.password} aria-describedby={errors.password ? 'password-error' : undefined} {...register('password')}
               />
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+              {errors.password && <p id="password-error" role="alert" className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -102,10 +99,10 @@ export default function ResetPassword() {
                 id="confirmPassword"
                 type="password"
                 autoComplete="new-password"
-                {...register('confirmPassword')}
+                aria-invalid={!!errors.confirmPassword} aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined} {...register('confirmPassword')}
               />
               {errors.confirmPassword && (
-                <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+                <p id="confirmPassword-error" role="alert" className="text-sm text-destructive">{errors.confirmPassword.message}</p>
               )}
             </div>
           </div>

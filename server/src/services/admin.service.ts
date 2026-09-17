@@ -48,8 +48,10 @@ export class AdminService {
     }
 
     const previousStatus = post.status;
-    post.status = nextStatus;
-    await post.save();
+    const updated = await Post.findOneAndUpdate({ _id: post._id, status: previousStatus }, {
+      $set: { status: nextStatus },
+    }, { returnDocument: 'after', runValidators: true });
+    if (!updated) throw new AppError('Post status changed. Reload before trying again.', 409);
     await activityService.record({
       postId: post._id,
       type: 'status-changed',
@@ -59,8 +61,8 @@ export class AdminService {
 
     return {
       _id: post._id,
-      status: post.status,
-      updatedAt: post.updatedAt,
+      status: updated.status,
+      updatedAt: updated.updatedAt,
     };
   }
 

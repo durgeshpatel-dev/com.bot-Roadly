@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiErrorMessage } from '../../lib/api-error';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,7 +12,7 @@ import { Alert } from '../../components/ui/alert';
 import { AuthPanel } from '../../components/auth/AuthPanel';
 
 const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().trim().email('Please enter a valid email address'),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -35,10 +36,10 @@ export default function Login() {
     try {
       setError(null);
       await login(data);
-      const from = (location.state as any)?.from?.pathname || '/';
+      const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/';
       navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message || 'Failed to login');
+    } catch (err: unknown) {
+      setError(apiErrorMessage(err, 'Failed to login'));
     }
   };
 
@@ -59,9 +60,9 @@ export default function Login() {
                 type="email"
                 autoComplete="email"
                 placeholder="you@example.com"
-                {...register('email')}
+                aria-invalid={!!errors.email} aria-describedby={errors.email ? 'email-error' : undefined} {...register('email')}
               />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+              {errors.email && <p id="email-error" role="alert" className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -75,9 +76,9 @@ export default function Login() {
                 id="password"
                 type="password"
                 autoComplete="current-password"
-                {...register('password')}
+                aria-invalid={!!errors.password} aria-describedby={errors.password ? 'password-error' : undefined} {...register('password')}
               />
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+              {errors.password && <p id="password-error" role="alert" className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
           </div>
 

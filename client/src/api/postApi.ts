@@ -56,12 +56,12 @@ export const createPost = async (data: CreatePostInput): Promise<PostSummary> =>
   return response.data.data.post;
 };
 
-export const upvotePost = async (postId: string) => {
+export const upvotePost = async (postId: string): Promise<{ hasVoted: boolean; voteCount: number }> => {
   const response = await apiClient.post(`/posts/${postId}/vote`);
   return response.data.data;
 };
 
-export const unvotePost = async (postId: string) => {
+export const unvotePost = async (postId: string): Promise<{ hasVoted: boolean; voteCount: number }> => {
   const response = await apiClient.delete(`/posts/${postId}/vote`);
   return response.data.data;
 };

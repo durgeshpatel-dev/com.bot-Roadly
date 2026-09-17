@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Activity, ActivityEventType, ActivityMetadata } from '../models/Activity';
 import { Post } from '../models/Post';
 import { AppError } from '../utils/AppError';
+import { paginationQuerySchema } from '../middleware/validations/post.validation';
 
 export interface ActivityRecordInput {
   postId: string | mongoose.Types.ObjectId;
@@ -30,11 +31,6 @@ export interface ActivityListResult {
   };
 }
 
-const getPositiveInt = (value: unknown, fallback: number, maximum: number) => {
-  const parsed = typeof value === 'string' ? Number.parseInt(value, 10) : Number.NaN;
-  return Number.isFinite(parsed) ? Math.min(maximum, Math.max(1, parsed)) : fallback;
-};
-
 export class ActivityService {
   async record({ postId, type, actorId, metadata }: ActivityRecordInput) {
     return Activity.create({
@@ -55,8 +51,9 @@ export class ActivityService {
       throw new AppError('Post not found', 404);
     }
 
-    const page = getPositiveInt(query.page, 1, Number.MAX_SAFE_INTEGER);
-    const limit = getPositiveInt(query.limit, 20, 50);
+    const pagination = paginationQuerySchema.strict().parse(query);
+    const page = Number(pagination.page ?? 1);
+    const limit = Number(pagination.limit ?? 20);
     const skip = (page - 1) * limit;
 
     const [rawActivities, total] = await Promise.all([

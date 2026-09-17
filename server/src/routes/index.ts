@@ -38,7 +38,7 @@ router.get('/health', async (req, res) => {
       dbStatus,
       uptime: process.uptime()
     });
-  } catch (error) {
+  } catch {
     sendError(res, 500, { 
       code: 'INTERNAL_SERVER_ERROR', 
       message: 'Health check failed' 

@@ -9,20 +9,27 @@ export function CommentForm({
   initialValue = '',
   placeholder = 'Write a comment...'
 }: {
-  onSubmit: (content: string) => void;
+  onSubmit: (content: string) => unknown | Promise<unknown>;
   onCancel?: () => void;
   isLoading?: boolean;
   initialValue?: string;
   placeholder?: string;
 }) {
   const [content, setContent] = useState(initialValue);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const pending = isLoading || isSubmitting;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) return;
-    onSubmit(content);
-    if (!initialValue) {
-      setContent('');
+    if (!content.trim() || pending) return;
+    setIsSubmitting(true);
+    try {
+      await onSubmit(content.trim());
+      if (!initialValue) setContent('');
+    } catch {
+      // The mutation displays the error toast; retain the draft so it can be retried.
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -32,17 +39,19 @@ export function CommentForm({
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder={placeholder}
-        disabled={isLoading}
+        aria-label={initialValue ? 'Edit comment' : placeholder}
+        maxLength={2000}
+        disabled={pending}
         className="min-h-[100px] resize-y w-full"
       />
       <div className="flex gap-2 justify-end">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={pending}>
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={isLoading || !content.trim()}>
-          {isLoading ? 'Submitting...' : 'Submit'}
+        <Button type="submit" disabled={pending || !content.trim()}>
+          {pending ? 'Submitting...' : 'Submit'}
         </Button>
       </div>
     </form>

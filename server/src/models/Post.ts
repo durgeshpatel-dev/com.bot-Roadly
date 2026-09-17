@@ -84,7 +84,5 @@ postSchema.index({ voteCount: -1 });
 postSchema.index({ commentCount: -1 });
 // 5. { createdAt: -1 }: Required for sorting posts by "Newest" (default sort).
 postSchema.index({ createdAt: -1 });
-// 6. { author: 1 }: Required for fetching posts for the "My Requests" page efficiently.
-postSchema.index({ author: 1 });
 
 export const Post = mongoose.model<IPost>('Post', postSchema);

@@ -1,84 +1,88 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { QueryKey } from '@tanstack/react-query';
 import { upvotePost, unvotePost } from '../api/postApi';
+import type { PostsResponse } from '../api/postApi';
+import type { PostSummary } from '../types/post.types';
+import { toastManager } from '../components/ui/toast';
 
+type VoteState = Pick<PostSummary, 'hasVoted' | 'voteCount'>;
 interface VoteContext {
-  previousPostsQueries: [any, any][];
-  previousPostDetail: any;
+  lists: [QueryKey, VoteState][];
+  detail?: VoteState;
 }
+
+const voteState = ({ hasVoted, voteCount }: VoteState): VoteState => ({ hasVoted, voteCount });
 
 export const useVote = () => {
   const queryClient = useQueryClient();
 
-  const handleVote = async (postId: string, action: 'upvote' | 'unvote'): Promise<VoteContext> => {
-    // Cancel any outgoing refetches so they don't overwrite our optimistic update
-    await queryClient.cancelQueries({ queryKey: ['posts'] });
-    await queryClient.cancelQueries({ queryKey: ['post', postId] });
+  const updateLists = (postId: string, update: (post: PostSummary) => PostSummary) => {
+    queryClient.setQueriesData<PostsResponse>({ queryKey: ['posts'] }, (old) => old && ({
+      ...old, posts: old.posts.map((post) => post._id === postId ? update(post) : post),
+    }));
+  };
 
-    // Snapshot previous values
-    const previousPostsQueries = queryClient.getQueriesData({ queryKey: ['posts'] });
-    const previousPostDetail = queryClient.getQueryData(['post', postId]);
-
-    // Optimistically update post list queries
-    queryClient.setQueriesData({ queryKey: ['posts'] }, (old: any) => {
-      if (!old || !old.posts) return old;
-      return {
-        ...old,
-        posts: old.posts.map((post: any) => {
-          if (post._id === postId) {
-            return {
-              ...post,
-              hasVoted: action === 'upvote',
-              voteCount: post.voteCount + (action === 'upvote' ? 1 : -1),
-            };
-          }
-          return post;
-        }),
-      };
-    });
-
-    // Optimistically update single post query
-    if (previousPostDetail) {
-      queryClient.setQueryData(['post', postId], (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          hasVoted: action === 'upvote',
-          voteCount: old.voteCount + (action === 'upvote' ? 1 : -1),
-        };
-      });
+  const handleVote = async (postId: string, hasVoted: boolean): Promise<VoteContext> => {
+    await Promise.all([
+      queryClient.cancelQueries({ queryKey: ['posts'] }),
+      queryClient.cancelQueries({ queryKey: ['post', postId] }),
+    ]);
+    const lists: VoteContext['lists'] = [];
+    for (const [key, cached] of queryClient.getQueriesData<PostsResponse>({ queryKey: ['posts'] })) {
+      const post = cached?.posts.find((item) => item._id === postId);
+      if (post) lists.push([key, voteState(post)]);
     }
-
-    return { previousPostsQueries, previousPostDetail };
+    const detail = queryClient.getQueryData<PostSummary>(['post', postId]);
+    const optimistic = (post: PostSummary): PostSummary => ({
+      ...post, hasVoted,
+      voteCount: Math.max(0, post.voteCount + (Boolean(post.hasVoted) === hasVoted ? 0 : hasVoted ? 1 : -1)),
+    });
+    updateLists(postId, optimistic);
+    queryClient.setQueryData<PostSummary>(['post', postId], (old) => old && optimistic(old));
+    return { lists, detail: detail && voteState(detail) };
   };
 
   const rollback = (context: VoteContext | undefined, postId: string) => {
-    if (context?.previousPostsQueries) {
-      context.previousPostsQueries.forEach(([queryKey, queryData]) => {
-        queryClient.setQueryData(queryKey, queryData);
-      });
+    // Restore only this post's vote fields, preserving other pending votes and edits.
+    for (const [key, previous] of context?.lists ?? []) {
+      queryClient.setQueryData<PostsResponse>(key, (old) => old && ({
+        ...old, posts: old.posts.map((post) => post._id === postId ? { ...post, ...previous } : post),
+      }));
     }
-    if (context?.previousPostDetail) {
-      queryClient.setQueryData(['post', postId], context.previousPostDetail);
+    if (context?.detail) {
+      queryClient.setQueryData<PostSummary>(['post', postId], (old) => old && ({ ...old, ...context.detail }));
     }
+    toastManager.add({ type: 'error', title: 'Vote failed. Please try again.' });
+  };
+
+  const reconcile = (postId: string, state: VoteState) => {
+    updateLists(postId, (post) => ({ ...post, ...state }));
+    queryClient.setQueryData<PostSummary>(['post', postId], (old) => old && ({ ...old, ...state }));
   };
 
   const invalidate = (postId: string) => {
-    queryClient.invalidateQueries({ queryKey: ['posts'] });
-    queryClient.invalidateQueries({ queryKey: ['post', postId] });
+    void queryClient.invalidateQueries({ queryKey: ['post', postId] });
+    // Refetch shared lists after the last pending vote, avoiding optimistic flicker.
+    if (queryClient.isMutating({ mutationKey: ['vote'] }) === 1) {
+      for (const queryKey of [['posts'], ['roadmap'], ['admin']]) void queryClient.invalidateQueries({ queryKey });
+    }
   };
 
   const upvoteMutation = useMutation({
-    mutationFn: (postId: string) => upvotePost(postId),
-    onMutate: async (postId) => handleVote(postId, 'upvote'),
-    onError: (_err, postId, context) => rollback(context, postId),
-    onSettled: (_data, _err, postId) => invalidate(postId),
+    mutationKey: ['vote'],
+    mutationFn: upvotePost,
+    onMutate: (postId) => handleVote(postId, true),
+    onError: (_error, postId, context) => rollback(context, postId),
+    onSuccess: (state, postId) => reconcile(postId, state),
+    onSettled: (_data, _error, postId) => invalidate(postId),
   });
-
   const unvoteMutation = useMutation({
-    mutationFn: (postId: string) => unvotePost(postId),
-    onMutate: async (postId) => handleVote(postId, 'unvote'),
-    onError: (_err, postId, context) => rollback(context, postId),
-    onSettled: (_data, _err, postId) => invalidate(postId),
+    mutationKey: ['vote'],
+    mutationFn: unvotePost,
+    onMutate: (postId) => handleVote(postId, false),
+    onError: (_error, postId, context) => rollback(context, postId),
+    onSuccess: (state, postId) => reconcile(postId, state),
+    onSettled: (_data, _error, postId) => invalidate(postId),
   });
 
   return {

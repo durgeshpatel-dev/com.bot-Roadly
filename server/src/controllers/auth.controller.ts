@@ -1,38 +1,16 @@
 import { Request, Response } from 'express';
-import { z } from 'zod';
+import { env } from '../config/env';
+import { AppError } from '../utils/AppError';
 import { AuthService } from '../services/auth.service';
 import { catchAsync } from '../utils/catchAsync';
 import { sendSuccess } from '../utils/response';
 
-export const registerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters').max(50),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
-
-export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
-
-export const verifyEmailSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-});
-
-export const forgotPasswordSchema = z.object({
-  email: z.string().email('Invalid email address'),
-});
-
-export const resetPasswordSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
-
 // Helper for cookie options
 const getCookieOptions = () => ({
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
+  secure: env.NODE_ENV === 'production',
+  sameSite: env.COOKIE_SAME_SITE,
+  path: '/api/auth',
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 });
 
@@ -64,15 +42,9 @@ export class AuthController {
   });
 
   static refresh = catchAsync(async (req: Request, res: Response) => {
-    const token = req.cookies.refreshToken;
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'INVALID_TOKEN',
-          message: 'No refresh token found',
-        },
-      });
+    const token = req.cookies?.refreshToken;
+    if (typeof token !== 'string' || !token) {
+      throw new AppError('No refresh token found', 401);
     }
 
     const { accessToken, refreshTokenString } = await AuthService.refresh(token);
@@ -85,12 +57,13 @@ export class AuthController {
   });
 
   static logout = catchAsync(async (req: Request, res: Response) => {
-    const token = req.cookies.refreshToken;
-    if (token) {
+    const token = req.cookies?.refreshToken;
+    if (typeof token === 'string' && token) {
       await AuthService.logout(token);
     }
     
-    res.clearCookie('refreshToken', getCookieOptions());
+    const { maxAge: _maxAge, ...clearOptions } = getCookieOptions();
+    res.clearCookie('refreshToken', clearOptions);
     
     sendSuccess(res, 200, {
       message: 'Logged out successfully.',

@@ -6,9 +6,13 @@ import { Alert } from '../ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Empty, EmptyDescription, EmptyTitle } from '../ui/empty';
 import { Skeleton } from '../ui/skeleton';
+import { Button } from '../ui/button';
+import { FeedPagination } from '../shared/FeedPagination';
+import { useState } from 'react';
 
-export function CommentList({ postId }: { postId: string }) {
-  const { comments, isLoading, isError, createComment, isCreating } = useComments(postId);
+export function CommentList({ postId, commentCount }: { postId: string; commentCount?: number }) {
+  const [page, setPage] = useState(1);
+  const { comments, meta, isLoading, isError, createComment, isCreating, refetch } = useComments(postId, page);
   const { isAuthenticated } = useAuth();
 
   if (isLoading) {
@@ -26,14 +30,14 @@ export function CommentList({ postId }: { postId: string }) {
     );
   }
 
-  if (isError) return <Alert className="mt-8">Failed to load comments</Alert>;
+  if (isError) return <Alert variant="error" className="mt-8 flex flex-wrap items-center justify-between gap-3">Failed to load comments<Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button></Alert>;
 
-  const commentCount = comments.length + comments.reduce((acc, c) => acc + (c.replies?.length || 0), 0);
+  const visibleCount = comments.filter((comment) => !comment.isDeleted).length + comments.reduce((count, comment) => count + (comment.replies?.filter((reply) => !reply.isDeleted).length || 0), 0);
 
   return (
     <Card className="mt-8">
       <CardHeader className="border-b">
-        <CardTitle>Comments ({commentCount})</CardTitle>
+        <CardTitle>Comments ({commentCount ?? visibleCount})</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {isAuthenticated ? (
@@ -41,6 +45,7 @@ export function CommentList({ postId }: { postId: string }) {
         ) : (
           <Alert>You must be logged in to leave a comment.</Alert>
         )}
+        {meta && <FeedPagination meta={{ ...meta, hasPrevPage: page > 1, hasNextPage: page < meta.totalPages }} page={page} onPageChange={setPage} />}
 
         {comments.length === 0 ? (
           <Empty>

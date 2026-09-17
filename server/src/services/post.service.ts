@@ -3,6 +3,15 @@ import { Comment } from '../models/Comment';
 import { AppError } from '../utils/AppError';
 import mongoose from 'mongoose';
 import { activityService } from './activity.service';
+import { Activity } from '../models/Activity';
+import { getPostsQuerySchema } from '../middleware/validations/post.validation';
+
+const publicPost = <T extends { voters?: mongoose.Types.ObjectId[] }>(post: T, currentUserId?: string) => {
+  const hasVoted = !!currentUserId && !!post.voters?.some(voter => voter.toString() === currentUserId);
+  const result = { ...post, hasVoted };
+  delete result.voters;
+  return result;
+};
 
 export class PostService {
   async createPost(userId: string, data: Partial<IPost>) {
@@ -17,12 +26,14 @@ export class PostService {
     
     await post.save();
     await activityService.record({ postId: post._id, type: 'post-created', actorId: userId }).catch(() => undefined);
-    return post.populate('author', 'name _id');
+    await post.populate('author', 'name _id');
+    return publicPost(post.toObject(), userId);
   }
 
-  async getPosts(query: any, currentUserId?: string) {
-    const page = Math.max(1, parseInt(query.page) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(query.limit) || 10));
+  async getPosts(rawQuery: Record<string, unknown>, currentUserId?: string) {
+    const query = getPostsQuerySchema.parse(rawQuery);
+    const page = Number(query.page ?? 1);
+    const limit = Number(query.limit ?? 10);
     const skip = (page - 1) * limit;
 
     const filter: any = {};
@@ -48,6 +59,7 @@ export class PostService {
 
     const [rawPosts, total] = await Promise.all([
       Post.find(filter)
+        .select(currentUserId ? '' : '-voters')
         .sort(sortOption)
         .skip(skip)
         .limit(limit)
@@ -56,11 +68,7 @@ export class PostService {
       Post.countDocuments(filter)
     ]);
 
-    const posts = rawPosts.map((post: any) => {
-      const hasVoted = currentUserId ? post.voters.some((v: any) => v.toString() === currentUserId) : false;
-      const { voters: _voters, ...publicPost } = post;
-      return { ...publicPost, hasVoted };
-    });
+    const posts = rawPosts.map(post => publicPost(post, currentUserId));
 
     return {
       posts,
@@ -80,16 +88,13 @@ export class PostService {
       throw new AppError('Post not found', 404);
     }
 
-    const post: any = await Post.findById(postId).populate('author', 'name _id').lean();
+    const post = await Post.findById(postId).select(currentUserId ? '' : '-voters').populate('author', 'name _id').lean();
     
     if (!post) {
       throw new AppError('Post not found', 404);
     }
 
-    const hasVoted = currentUserId ? post.voters.some((v: any) => v.toString() === currentUserId) : false;
-    const { voters: _voters, ...publicPost } = post;
-
-    return { ...publicPost, hasVoted };
+    return publicPost(post, currentUserId);
   }
 
   async updatePost(postId: string, userId: string, userRole: string, data: Partial<IPost>) {
@@ -112,7 +117,8 @@ export class PostService {
     if (data.categories) post.categories = data.categories;
 
     await post.save();
-    return post.populate('author', 'name _id');
+    await post.populate('author', 'name _id');
+    return publicPost(post.toObject(), userId);
   }
 
   async deletePost(postId: string, userId: string, userRole: string) {
@@ -132,6 +138,7 @@ export class PostService {
 
     await Post.deleteOne({ _id: postId });
     await Comment.deleteMany({ post: postId });
+    await Activity.deleteMany({ post: postId });
 
     return true;
   }
@@ -144,7 +151,7 @@ export class PostService {
     const post = await Post.findOneAndUpdate(
       { _id: postId, voters: { $ne: userId } },
       { $addToSet: { voters: userId }, $inc: { voteCount: 1 } },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!post) {
@@ -166,7 +173,7 @@ export class PostService {
     const post = await Post.findOneAndUpdate(
       { _id: postId, voters: userId },
       { $pull: { voters: userId }, $inc: { voteCount: -1 } },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!post) {

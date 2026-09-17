@@ -9,6 +9,8 @@ import { useAdminPosts, useUpdatePostStatus } from '../../hooks/useAdmin';
 import { AdminPostRow } from '../../components/admin/AdminPostRow';
 import { PageHeader } from '../../components/layout/PageHeader';
 import type { AdminPostFilters } from '../../types/post.types';
+import { POST_STATUS_LABELS } from '../../types/post.types';
+import type { PostStatus } from '../../types/post.types';
 
 export default function AdminPostsPage() {
   const [filters, setFilters] = useState<AdminPostFilters>({ page: 1, limit: 50 });
@@ -32,7 +34,7 @@ export default function AdminPostsPage() {
         actions={(
           <Select value={filters.status || 'all'} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-44" aria-label="Filter requests by status">
-              <SelectValue placeholder="All statuses" />
+              <SelectValue>{filters.status ? POST_STATUS_LABELS[filters.status as PostStatus] : 'All statuses'}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>

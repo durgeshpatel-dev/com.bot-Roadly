@@ -12,7 +12,7 @@ import { AuthPanel } from '../../components/auth/AuthPanel';
 import { MailCheck } from 'lucide-react';
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  email: z.string().trim().email('Please enter a valid email address'),
 });
 
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
@@ -48,9 +48,7 @@ export default function ForgotPassword() {
           <p className="text-center text-muted-foreground">
             If an account exists with that email, we have sent a password reset link.
           </p>
-          <Link to="/login" className="block w-full">
-            <Button className="w-full">Return to login</Button>
-          </Link>
+          <Button className="w-full" render={<Link to="/login" />}>Return to login</Button>
       </AuthPanel>
     );
   }
@@ -72,9 +70,9 @@ export default function ForgotPassword() {
                 type="email"
                 autoComplete="email"
                 placeholder="you@example.com"
-                {...register('email')}
+                aria-invalid={!!errors.email} aria-describedby={errors.email ? 'email-error' : undefined} {...register('email')}
               />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+              {errors.email && <p id="email-error" role="alert" className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
           </div>
 

@@ -55,7 +55,7 @@ export function AdminPostRow({ post, isUpdating, onStatusChange }: AdminPostRowP
           disabled={isUpdating}
         >
           <SelectTrigger className="w-40" aria-label={`Change status for ${post.title}`}>
-            <SelectValue />
+            <SelectValue>{POST_STATUS_LABELS[post.status]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {statusOptions.map((status) => (

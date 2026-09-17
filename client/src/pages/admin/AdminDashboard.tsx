@@ -25,9 +25,9 @@ function MetricCard({ label, value, icon }: { label: string; value: number; icon
 
 function TopRequests({ title, posts, metric }: { title: string; posts: AdminStatsPost[]; metric: 'voteCount' | 'commentCount' }) {
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle render={<h2 />}>{title}</CardTitle>
         <CardDescription>Highest engagement across all requests.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -88,7 +88,7 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Status overview</CardTitle>
+              <CardTitle render={<h2 />}>Status overview</CardTitle>
               <CardDescription>Current lifecycle distribution of all requests.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <TopRequests title="Top voted" posts={statsQuery.data.topVoted} metric="voteCount" />
             <TopRequests title="Top discussed" posts={statsQuery.data.topDiscussed} metric="commentCount" />
           </div>

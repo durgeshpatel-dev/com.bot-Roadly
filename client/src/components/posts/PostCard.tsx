@@ -24,7 +24,7 @@ export function PostCard({ post }: { post: PostSummary }) {
             <AvatarFallback>{authorName.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="text-sm font-medium">{authorName}</p>
+            <p className="wrap-anywhere text-sm font-medium">{authorName}</p>
             <p className="flex items-center gap-1 text-xs text-muted-foreground">
               <Clock3 className="size-3" aria-hidden="true" />
               {formatDate(post.createdAt)}
@@ -36,7 +36,7 @@ export function PostCard({ post }: { post: PostSummary }) {
 
       <CardContent className="space-y-4 pt-0">
         <div>
-          <CardTitle className="text-xl leading-tight">
+          <CardTitle render={<h2 />} className="wrap-anywhere text-xl leading-tight">
             <Link to={`/posts/${post._id}`} className="hover:text-primary hover:underline">
               {post.title}
             </Link>

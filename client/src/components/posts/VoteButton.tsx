@@ -42,7 +42,7 @@ export const VoteButton = ({ postId, voteCount, hasVoted, className }: VoteButto
         variant={hasVoted ? 'default' : 'outline'}
         size="sm"
         className={cn(
-          'h-auto min-w-16 flex-col gap-1 rounded-lg px-3 py-3 transition-colors',
+          'h-auto min-w-16 flex-col gap-1 rounded-lg px-3 py-3 transition-colors sm:h-auto',
           hasVoted
             ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
             : 'text-muted-foreground hover:border-primary/30 hover:bg-accent hover:text-foreground',

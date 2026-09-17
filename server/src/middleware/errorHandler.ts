@@ -1,45 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
+import { ZodError } from 'zod';
 import { AppError } from '../utils/AppError';
-import { env } from '../config/env';
+
+const codes: Record<number, string> = {
+  400: 'VALIDATION_ERROR', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN', 404: 'NOT_FOUND',
+  409: 'CONFLICT', 413: 'PAYLOAD_TOO_LARGE', 429: 'RATE_LIMITED', 503: 'SERVICE_UNAVAILABLE',
+};
 
 export const errorHandler = (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction
+  error: unknown, _req: Request, res: Response, _next: NextFunction
 ) => {
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
-
-  if (env.NODE_ENV === 'development') {
-    res.status(err.statusCode).json({
-      success: false,
-      error: {
-        code: err.status,
-        message: err.message,
-        stack: err.stack,
-      },
-    });
-  } else {
-    // Production
-    if (err.isOperational) {
-      res.status(err.statusCode).json({
-        success: false,
-        error: {
-          code: err.status,
-          message: err.message,
-        },
-      });
-    } else {
-      // Programming or other unknown error: don't leak error details
-      console.error('ERROR 💥', err);
-      res.status(500).json({
-        success: false,
-        error: {
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Something went wrong!',
-        },
-      });
-    }
+  let statusCode = 500;
+  let message = 'Something went wrong!';
+  if (error instanceof AppError) {
+    statusCode = error.statusCode;
+    message = error.message;
+  } else if (error instanceof ZodError) {
+    statusCode = 400;
+    message = error.issues.map(issue => issue.message).join(', ');
+  } else if (error instanceof mongoose.Error.ValidationError || error instanceof mongoose.Error.CastError) {
+    statusCode = 400;
+    message = 'Invalid request data';
+  } else if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
+    statusCode = 409;
+    message = 'Resource already exists';
+  } else if (error && typeof error === 'object' && 'type' in error) {
+    if (error.type === 'entity.parse.failed') { statusCode = 400; message = 'Invalid JSON body'; }
+    if (error.type === 'entity.too.large') { statusCode = 413; message = 'Request body is too large'; }
   }
+  if (statusCode === 500) console.error('Request failed with an unexpected server error');
+  res.status(statusCode).json({
+    success: false, error: { code: codes[statusCode] ?? 'INTERNAL_SERVER_ERROR', message, statusCode },
+  });
 };

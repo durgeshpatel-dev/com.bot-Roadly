@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../api/auth.api';
-import type { AuthResponse } from '../api/auth.api';
+import type { AuthResponse, LoginInput, SignupInput } from '../api/auth.api';
 import { setAccessToken } from '../api/axios';
 
 interface AuthContextType {
@@ -9,8 +10,8 @@ interface AuthContextType {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (data: any) => Promise<void>;
-  signup: (data: any) => Promise<void>;
+  login: (data: LoginInput) => Promise<void>;
+  signup: (data: SignupInput) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -18,81 +19,81 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<AuthResponse['user'] | null>(null);
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const authCheck = useRef<Promise<void> | null>(null);
+  const identityVersion = useRef(0);
 
-  const checkAuth = async () => {
-    try {
-      // First try to refresh token via httpOnly cookie
-      const { data: refreshData } = await authApi.refresh();
-      const token = refreshData.data.accessToken;
-      
-      setAccessToken(token); // Update axios interceptor
-      setAccessTokenState(token); // Update react state
+  const resetIdentityCache = useCallback(() => {
+    queryClient.removeQueries({ queryKey: ['admin'] });
+    void queryClient.resetQueries({ predicate: ({ queryKey }) => ['posts', 'post', 'roadmap'].includes(String(queryKey[0])) });
+  }, [queryClient]);
 
-      // If refresh succeeded, fetch user profile
-      const { data: userData } = await authApi.getMe();
-      setUser(userData.user);
-    } catch (error) {
-      setUser(null);
-      setAccessTokenState(null);
-      setAccessToken(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const checkAuth = useCallback(() => {
+    if (authCheck.current) return authCheck.current;
+    const version = identityVersion.current;
+    authCheck.current = (async () => {
+      try {
+        const token = await authApi.refresh();
+        const { data: { data } } = await authApi.getMe();
+        if (version !== identityVersion.current) return;
+        setAccessTokenState(token);
+        setUser(data.user);
+        resetIdentityCache();
+      } catch {
+        if (version !== identityVersion.current) return;
+        setUser(null);
+        setAccessTokenState(null);
+        setAccessToken(null);
+      } finally {
+        setIsLoading(false);
+        authCheck.current = null;
+      }
+    })();
+    return authCheck.current;
+  }, [resetIdentityCache]);
 
   useEffect(() => {
-    checkAuth();
-
-    // Listen for unauthorized events from axios interceptor
     const handleUnauthorized = () => {
+      identityVersion.current += 1;
       setUser(null);
       setAccessTokenState(null);
+      resetIdentityCache();
     };
-
+    const handleToken = (event: Event) => setAccessTokenState((event as CustomEvent<string | null>).detail);
     window.addEventListener('auth:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
-  }, []);
+    window.addEventListener('auth:token', handleToken);
+    void checkAuth();
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      window.removeEventListener('auth:token', handleToken);
+    };
+  }, [checkAuth, resetIdentityCache]);
 
-  const login = async (credentials: any) => {
-    const { data } = await authApi.login(credentials);
-    const token = data.accessToken!;
-    
-    setAccessToken(token);
-    setAccessTokenState(token);
+  const login = async (credentials: LoginInput) => {
+    const { data: { data } } = await authApi.login(credentials);
+    identityVersion.current += 1;
+    setAccessToken(data.accessToken);
+    setAccessTokenState(data.accessToken);
     setUser(data.user);
+    resetIdentityCache();
   };
 
-  const signup = async (credentials: any) => {
-    await authApi.register(credentials);
-    // Don't auto-login after signup as they need to verify email
-  };
+  const signup = async (credentials: SignupInput) => { await authApi.register(credentials); };
 
   const logout = async () => {
-    try {
-      await authApi.logout();
-    } finally {
-      setAccessToken(null);
-      setAccessTokenState(null);
-      setUser(null);
-    }
+    identityVersion.current += 1;
+    setAccessToken(null);
+    setAccessTokenState(null);
+    setUser(null);
+    resetIdentityCache();
+    await authApi.logout();
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        accessToken,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        signup,
-        logout,
-        checkAuth,
-      }}
-    >
+    <AuthContext.Provider value={{ user, accessToken, isAuthenticated: !!user, isLoading, login, signup, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );
@@ -100,8 +101,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

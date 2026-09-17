@@ -7,6 +7,7 @@ import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetPanel, SheetTitle, SheetTrigger } from '../ui/sheet';
 import { Spinner } from '../ui/spinner';
+import { toastManager } from '../ui/toast';
 import { ThemeToggle } from './ThemeToggle';
 
 const mainLinks = [
@@ -42,9 +43,13 @@ export function SiteHeader() {
     openSubmission();
   };
 
-  const signOut = () => {
+  const signOut = async () => {
     setMobileNavOpen(false);
-    logout();
+    try {
+      await logout();
+    } catch {
+      toastManager.add({ type: 'error', title: 'Server sign out failed', description: 'Your local session was cleared. Please retry when connected.' });
+    }
   };
 
   return (
@@ -70,12 +75,12 @@ export function SiteHeader() {
                 </NavLink>
               )}
               <span className="hidden max-w-32 truncate text-sm text-muted-foreground lg:inline">{user?.name}</span>
-              <Button variant="outline" size="sm" onClick={() => logout()}>Sign out</Button>
+              <Button variant="outline" size="sm" onClick={signOut}>Sign out</Button>
             </>
           ) : (
             <>
-              <NavLink to="/login"><Button variant="ghost" size="sm">Sign in</Button></NavLink>
-              <NavLink to="/signup"><Button variant="outline" size="sm">Create account</Button></NavLink>
+              <Button render={<NavLink to="/login" />} variant="ghost" size="sm">Sign in</Button>
+              <Button render={<NavLink to="/signup" />} variant="outline" size="sm">Create account</Button>
             </>
           )}
         </div>
@@ -99,9 +104,9 @@ export function SiteHeader() {
                       <Button variant="outline" className="w-full" onClick={signOut}>Sign out</Button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      <NavLink to="/login" onClick={() => setMobileNavOpen(false)}><Button variant="outline" className="w-full">Sign in</Button></NavLink>
-                      <NavLink to="/signup" onClick={() => setMobileNavOpen(false)}><Button className="w-full">Create account</Button></NavLink>
+                    <div className="grid gap-2">
+                      <Button render={<NavLink to="/login" />} onClick={() => setMobileNavOpen(false)} variant="outline" className="w-full">Sign in</Button>
+                      <Button render={<NavLink to="/signup" />} onClick={() => setMobileNavOpen(false)} className="w-full">Create account</Button>
                     </div>
                   )}
                 </div>

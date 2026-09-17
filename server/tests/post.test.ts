@@ -10,7 +10,6 @@ describe('Post API (Phase 3)', () => {
   let adminToken: string;
   let otherUserToken: string;
   let userId: string;
-  let adminId: string;
   let otherUserId: string;
 
   beforeEach(async () => {
@@ -32,7 +31,6 @@ describe('Post API (Phase 3)', () => {
       password: 'password123',
       role: 'admin',
     });
-    adminId = admin.id;
     adminToken = signAccessToken({ userId: admin.id, role: admin.role });
 
     const otherUser = await User.create({

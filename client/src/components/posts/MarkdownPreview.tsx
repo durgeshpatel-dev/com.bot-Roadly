@@ -2,11 +2,14 @@ import ReactMarkdown from 'react-markdown';
 
 export function MarkdownPreview({ description, full = false }: { description: string; full?: boolean }) {
   return (
-    <div className={full ? 'prose prose-zinc dark:prose-invert max-w-none' : 'line-clamp-3 text-sm text-muted-foreground'}>
+    <div className={full ? 'markdown-content min-w-0 max-w-full' : 'line-clamp-3 wrap-anywhere text-sm text-muted-foreground'}>
       <ReactMarkdown
+        skipHtml
         components={{
-          a: ({ children }) => <span className="text-primary">{children}</span>,
+          a: ({ children, href }) => full ? <a href={href} rel="noreferrer">{children}</a> : <span>{children}</span>,
           img: () => null,
+          h1: ({ children }) => <h3>{children}</h3>,
+          h2: ({ children }) => <h3>{children}</h3>,
         }}
       >
         {description}

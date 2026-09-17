@@ -65,7 +65,7 @@ export default function PostDetailPage() {
             <StatusBadge status={post.status} />
             {post.categories.map((category) => <CategoryTag key={category} category={category} />)}
           </div>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{post.title}</h1>
+          <h1 className="wrap-anywhere text-3xl font-bold tracking-tight sm:text-4xl">{post.title}</h1>
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             <Avatar className="size-8">
               <AvatarFallback>{authorName.charAt(0).toUpperCase()}</AvatarFallback>
@@ -75,6 +75,7 @@ export default function PostDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
+          <h2 className="sr-only">Feature description</h2>
           <MarkdownPreview description={post.description} full />
           <div className="flex flex-wrap items-center gap-3 border-t pt-5">
             <VoteButton postId={post._id} voteCount={post.voteCount} hasVoted={Boolean(post.hasVoted)} />
@@ -90,7 +91,7 @@ export default function PostDetailPage() {
 
       <section aria-labelledby="discussion-heading">
         <h2 id="discussion-heading" className="sr-only">Feature discussion</h2>
-        <CommentList postId={post._id} />
+        <CommentList key={post._id} postId={post._id} commentCount={post.commentCount} />
       </section>
     </article>
   );

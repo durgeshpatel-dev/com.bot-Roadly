@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { postService } from '../services/post.service';
 import { sendSuccess } from '../utils/response';
-import { Request as ExpressRequest } from 'express';
 
 export const createPost = async (req: Request, res: Response) => {
   const post = await postService.createPost((req.user as any).id, req.body);

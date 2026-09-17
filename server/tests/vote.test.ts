@@ -9,7 +9,6 @@ describe('Voting API (Phase 4)', () => {
   let userToken: string;
   let otherUserToken: string;
   let userId: string;
-  let otherUserId: string;
   let postId: string;
 
   beforeEach(async () => {
@@ -31,7 +30,6 @@ describe('Voting API (Phase 4)', () => {
       password: 'password123',
       role: 'user',
     });
-    otherUserId = otherUser.id;
     otherUserToken = signAccessToken({ userId: otherUser.id, role: otherUser.role });
 
     const post = await Post.create({

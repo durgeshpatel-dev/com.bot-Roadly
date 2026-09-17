@@ -1,27 +1,25 @@
 import { z } from 'zod';
+import { POST_STATUSES } from '../../constants/postStatus';
 
 const postCategoryEnum = z.enum(['ui-ux', 'integrations', 'performance', 'general']);
-const postStatusEnum = z.enum(['under-review', 'planned', 'in-progress', 'completed']);
+const categories = z.array(postCategoryEnum).min(1, 'At least one category is required').max(4)
+  .refine(value => new Set(value).size === value.length, 'Duplicate categories are not allowed');
+const title = z.string().trim().min(5, 'Title must be at least 5 characters').max(150);
+const description = z.string().trim().min(20, 'Description must be at least 20 characters').max(5000);
 
-export const createPostSchema = z.object({
-  title: z.string().trim().min(5, 'Title must be at least 5 characters').max(150, 'Title cannot exceed 150 characters'),
-  description: z.string().min(20, 'Description must be at least 20 characters').max(5000, 'Description cannot exceed 5000 characters'),
-  categories: z.array(postCategoryEnum).min(1, 'At least one category is required'),
-});
-
+export const createPostSchema = z.object({ title, description, categories });
 export const updatePostSchema = z.object({
-  title: z.string().trim().min(5, 'Title must be at least 5 characters').max(150, 'Title cannot exceed 150 characters').optional(),
-  description: z.string().min(20, 'Description must be at least 20 characters').max(5000, 'Description cannot exceed 5000 characters').optional(),
-  categories: z.array(postCategoryEnum).min(1, 'At least one category is required').optional(),
+  title: title.optional(), description: description.optional(), categories: categories.optional(),
+}).refine(value => Object.keys(value).length > 0, 'At least one editable field is required');
+
+export const paginationQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).refine(value => Number(value) >= 1 && Number(value) <= 1_000_000, 'Page must be between 1 and 1000000').optional(),
+  limit: z.string().regex(/^\d+$/).refine(value => Number(value) >= 1 && Number(value) <= 50, 'Limit must be between 1 and 50').optional(),
 });
 
-export const getPostsQuerySchema = z.object({
-  query: z.object({
-    page: z.string().regex(/^\d+$/).transform((val) => Number(val)).optional(),
-    limit: z.string().regex(/^\d+$/).transform((val) => Number(val)).optional(),
-    sort: z.enum(['newest', 'most-voted', 'most-discussed']).optional().default('newest'),
-    category: z.string().optional(),
-    status: z.string().optional(),
-    search: z.string().optional(),
-  }),
-});
+export const getPostsQuerySchema = paginationQuerySchema.extend({
+  sort: z.enum(['newest', 'most-voted', 'most-discussed']).optional(),
+  category: z.string().max(100).refine(value => value.split(',').every(item => postCategoryEnum.safeParse(item).success), 'Invalid category filter').optional(),
+  status: z.string().max(100).refine(value => value.split(',').every(item => z.enum(POST_STATUSES).safeParse(item).success), 'Invalid status filter').optional(),
+  search: z.string().trim().max(200).optional(),
+}).strict();

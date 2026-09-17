@@ -71,7 +71,7 @@ export function ActivityTimeline({ postId }: { postId: string }) {
   return (
     <Card>
       <CardHeader className="border-b">
-        <CardTitle>Activity</CardTitle>
+        <CardTitle render={<h2 />}>Activity</CardTitle>
       </CardHeader>
       <CardContent>
         {activities.length === 0 ? (

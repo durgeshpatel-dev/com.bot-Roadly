@@ -62,6 +62,7 @@ export function PostForm({ open, onOpenChange }: { open: boolean; onOpenChange: 
       setIsSubmitting(true);
       await createPost({ title: trimmedTitle, description: trimmedDescription, categories });
       await queryClient.invalidateQueries({ queryKey: ['posts'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin'] });
       toastManager.add({ type: 'success', title: 'Feature request submitted' });
       close();
     } catch (submissionError: any) {

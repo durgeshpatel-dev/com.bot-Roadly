@@ -1,11 +1,14 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { beforeAll, afterAll, afterEach } from 'vitest';
+import { ipKeyGenerator } from 'express-rate-limit';
+import * as limiters from '../src/middleware/rateLimiter';
 
 let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  // Cold MongoDB process startup can exceed 10 seconds on Windows/CI hosts.
+  mongoServer = await MongoMemoryServer.create({ instance: { launchTimeout: 60000 } });
   const mongoUri = mongoServer.getUri();
   
   if (mongoose.connection.readyState !== 0) {
@@ -13,9 +16,14 @@ beforeAll(async () => {
   }
   
   await mongoose.connect(mongoUri);
+  await Promise.all(Object.values(mongoose.models).map(model => model.init()));
 });
 
 afterEach(async () => {
+  for (const limiter of Object.values(limiters)) {
+    limiter.resetKey(ipKeyGenerator('::ffff:127.0.0.1'));
+    limiter.resetKey(ipKeyGenerator('127.0.0.1'));
+  }
   if (mongoose.connection.readyState !== 0) {
     const collections = mongoose.connection.collections;
     for (const key in collections) {

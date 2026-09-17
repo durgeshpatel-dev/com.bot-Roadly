@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiErrorMessage } from '../../lib/api-error';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,9 +14,9 @@ import { CheckCircle2 } from 'lucide-react';
 
 const signupSchema = z
   .object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Please enter a valid email address'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    name: z.string().trim().min(2, 'Name must be at least 2 characters').max(50),
+    email: z.string().trim().email('Please enter a valid email address'),
+    password: z.string().min(8, 'Password must be at least 8 characters').refine(value => new TextEncoder().encode(value).length <= 72, 'Password must be at most 72 UTF-8 bytes'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -43,8 +44,8 @@ export default function Signup() {
       setError(null);
       await signup({ name: data.name, email: data.email, password: data.password });
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message || 'Failed to sign up');
+    } catch (err: unknown) {
+      setError(apiErrorMessage(err, 'Failed to sign up'));
     }
   };
 
@@ -57,9 +58,7 @@ export default function Signup() {
           <p className="text-center text-muted-foreground">
             Please check your email (or server console) for the verification link.
           </p>
-          <Link to="/login" className="block w-full">
-            <Button className="w-full">Return to login</Button>
-          </Link>
+          <Button className="w-full" render={<Link to="/login" />}>Return to login</Button>
       </AuthPanel>
     );
   }
@@ -76,8 +75,8 @@ export default function Signup() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" autoComplete="name" placeholder="John Doe" {...register('name')} />
-              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+              <Input id="name" autoComplete="name" placeholder="John Doe" aria-invalid={!!errors.name} aria-describedby={errors.name ? 'name-error' : undefined} {...register('name')} />
+              {errors.name && <p id="name-error" role="alert" className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -87,9 +86,9 @@ export default function Signup() {
                 type="email"
                 autoComplete="email"
                 placeholder="you@example.com"
-                {...register('email')}
+                aria-invalid={!!errors.email} aria-describedby={errors.email ? 'email-error' : undefined} {...register('email')}
               />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+              {errors.email && <p id="email-error" role="alert" className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -98,9 +97,9 @@ export default function Signup() {
                 id="password"
                 type="password"
                 autoComplete="new-password"
-                {...register('password')}
+                aria-invalid={!!errors.password} aria-describedby={errors.password ? 'password-error' : undefined} {...register('password')}
               />
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+              {errors.password && <p id="password-error" role="alert" className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -109,10 +108,10 @@ export default function Signup() {
                 id="confirmPassword"
                 type="password"
                 autoComplete="new-password"
-                {...register('confirmPassword')}
+                aria-invalid={!!errors.confirmPassword} aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined} {...register('confirmPassword')}
               />
               {errors.confirmPassword && (
-                <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+                <p id="confirmPassword-error" role="alert" className="text-sm text-destructive">{errors.confirmPassword.message}</p>
               )}
             </div>
           </div>

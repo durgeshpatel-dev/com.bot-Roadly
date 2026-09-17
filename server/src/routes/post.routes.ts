@@ -4,6 +4,7 @@ import { validate } from '../middleware/validate';
 import { createPostSchema, updatePostSchema } from '../middleware/validations/post.validation';
 import { createPost, getPosts, getPostById, updatePost, deletePost, upvotePost, unvotePost } from '../controllers/post.controller';
 import { getPostActivity } from '../controllers/activity.controller';
+import { writeLimiter, voteLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -17,12 +18,12 @@ router.use('/:postId/comments', postCommentRoutes);
 
 // Protected routes
 router.use(authenticate);
-router.post('/', validate(createPostSchema), createPost);
-router.put('/:id', validate(updatePostSchema), updatePost);
-router.delete('/:id', deletePost);
+router.post('/', writeLimiter, validate(createPostSchema), createPost);
+router.put('/:id', writeLimiter, validate(updatePostSchema), updatePost);
+router.delete('/:id', writeLimiter, deletePost);
 
 // Vote routes
-router.post('/:id/vote', upvotePost);
-router.delete('/:id/vote', unvotePost);
+router.post('/:id/vote', voteLimiter, upvotePost);
+router.delete('/:id/vote', voteLimiter, unvotePost);
 
 export default router;

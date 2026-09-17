@@ -1,23 +1,26 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import { AdminRoute, GuestRoute } from './components/auth/RouteGuards';
-import Home from './pages/Home';
-import PostDetailPage from './pages/PostDetailPage';
-import NotFoundPage from './pages/NotFoundPage';
-import RoadmapPage from './pages/RoadmapPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminPostsPage from './pages/admin/AdminPostsPage';
 import { AdminLayout } from './components/layout/AdminLayout';
-import Login from './pages/auth/Login';
-import Signup from './pages/auth/Signup';
-import VerifyEmail from './pages/auth/VerifyEmail';
-import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
 import { ToastProvider } from './components/ui/toast';
 import { ThemeProvider } from './context/ThemeContext';
 import { SiteHeader } from './components/layout/SiteHeader';
 import { FeatureSubmissionProvider } from './context/FeatureSubmissionContext';
+import { Skeleton } from './components/ui/skeleton';
+
+const Home = lazy(() => import('./pages/Home'));
+const PostDetailPage = lazy(() => import('./pages/PostDetailPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const RoadmapPage = lazy(() => import('./pages/RoadmapPage'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminPostsPage = lazy(() => import('./pages/admin/AdminPostsPage'));
+const Login = lazy(() => import('./pages/auth/Login'));
+const Signup = lazy(() => import('./pages/auth/Signup'));
+const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +36,7 @@ function AppContent() {
     <div className="app-shell">
       <SiteHeader />
       <main id="main-content" className="site-container page-shell">
+        <Suspense fallback={<div role="status" aria-label="Loading page"><Skeleton className="h-64 w-full rounded-2xl" /><span className="sr-only">Loading page...</span></div>}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/posts/:id" element={<PostDetailPage />} />
@@ -55,6 +59,7 @@ function AppContent() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </Suspense>
       </main>
     </div>
   );

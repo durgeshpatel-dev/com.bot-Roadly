@@ -53,7 +53,7 @@ const commentSchema = new Schema<IComment>(
 // Indexes documented in specs:
 // 1. Fetch comments for a post, sorted by time
 commentSchema.index({ post: 1, createdAt: 1 });
-// 2. User's comment history lookup
-commentSchema.index({ author: 1 });
+// Replies for the visible root comments, ordered without a collection scan.
+commentSchema.index({ parentComment: 1, createdAt: 1 });
 
 export const Comment = mongoose.model<IComment>('Comment', commentSchema);

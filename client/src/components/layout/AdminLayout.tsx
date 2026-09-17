@@ -2,7 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 
 export function AdminLayout() {
   return (
-    <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
       <aside className="surface h-fit p-4">
         <p className="mb-3 text-sm font-semibold text-muted-foreground">Admin</p>
         <nav className="flex gap-2 lg:flex-col">

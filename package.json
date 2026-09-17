@@ -2,6 +2,9 @@
   "name": "roadly",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=24 <25"
+  },
   "workspaces": [
     "client",
     "server"
@@ -9,9 +12,16 @@
   "scripts": {
     "dev": "concurrently \"npm run dev -w server\" \"npm run dev -w client\"",
     "build": "npm run build -w client && npm run build -w server",
-    "lint": "npm run lint -w client && npm run lint -w server"
+    "lint": "npm run lint -w client && npm run lint -w server",
+    "test": "npm run test -w server && npm run test -w client",
+    "typecheck": "npm run typecheck -w client && npm run typecheck -w server",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "devDependencies": {
     "concurrently": "^10.0.5"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "mongodb-memory-server@11.2.0": true
   }
 }

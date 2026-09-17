@@ -5,15 +5,11 @@ import { User } from '../src/models/User';
 import { Post } from '../src/models/Post';
 import { Comment } from '../src/models/Comment';
 import { signAccessToken } from '../src/utils/jwt';
-import mongoose from 'mongoose';
 
 describe('Comment API', () => {
   let user1Token: string;
   let user2Token: string;
   let adminToken: string;
-  let user1Id: string;
-  let user2Id: string;
-  let adminId: string;
   let postId: string;
 
   beforeEach(async () => {
@@ -24,10 +20,6 @@ describe('Comment API', () => {
     const user1 = await User.create({ name: 'User1', email: 'user1@test.com', password: 'password123' });
     const user2 = await User.create({ name: 'User2', email: 'user2@test.com', password: 'password123' });
     const admin = await User.create({ name: 'Admin', email: 'admin@test.com', password: 'password123', role: 'admin' });
-
-    user1Id = user1._id.toString();
-    user2Id = user2._id.toString();
-    adminId = admin._id.toString();
 
     user1Token = signAccessToken({ userId: user1._id.toString(), role: 'user' });
     user2Token = signAccessToken({ userId: user2._id.toString(), role: 'user' });

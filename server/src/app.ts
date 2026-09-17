@@ -8,6 +8,8 @@ import { AppError } from './utils/AppError';
 import routes from './routes';
 
 const app = express();
+app.set('trust proxy', env.TRUST_PROXY);
+app.disable('x-powered-by');
 
 // Security Middlewares
 app.use(helmet());
@@ -19,8 +21,8 @@ app.use(
 );
 
 // Body Parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '32kb' }));
+app.use(express.urlencoded({ extended: false, limit: '32kb' }));
 app.use(cookieParser());
 
 // Routes
