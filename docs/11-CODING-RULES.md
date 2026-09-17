@@ -5,7 +5,7 @@
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Frontend | TypeScript | Type safety, better DX, self-documenting, easier to explain in interview |
-| Backend | TypeScript | Shared types with frontend, Mongoose type support, consistent codebase |
+| Backend | TypeScript | Typed API contracts, Mongoose support, consistent codebase |
 
 **Classification:** 🟡 RECOMMENDED. Assessment says "MERN" without mandating JS or TS. TypeScript is the stronger choice for demonstrating code quality.
 
@@ -21,14 +21,14 @@
 | Hooks | camelCase with `use` prefix | `usePosts.ts`, `useAuth.ts` |
 | Utilities | camelCase | `formatDate.ts`, `catchAsync.ts` |
 | API functions | camelCase with resource prefix | `posts.api.ts`, `auth.api.ts` |
-| Models | PascalCase with `.model` suffix | `User.model.ts`, `Post.model.ts` |
+| Models | PascalCase | `User.ts`, `Post.ts` |
 | Controllers | camelCase with `.controller` suffix | `auth.controller.ts` |
 | Services | camelCase with `.service` suffix | `auth.service.ts` |
 | Routes | camelCase with `.routes` suffix | `auth.routes.ts` |
 | Validators | camelCase with `.validator` suffix | `auth.validator.ts` |
 | Types | PascalCase interfaces, camelCase for type files | `IUser`, `auth.types.ts` |
 | Constants | SCREAMING_SNAKE_CASE | `MAX_VOTE_COUNT`, `STATUS_ENUM` |
-| Environment variables | SCREAMING_SNAKE_CASE | `JWT_ACCESS_SECRET` |
+| Environment variables | SCREAMING_SNAKE_CASE | `JWT_SECRET` |
 | CSS classes | Tailwind utilities (no custom class naming) | — |
 
 ### Code Quality Rules
@@ -46,24 +46,24 @@
 11. **No token leakage.** Access tokens never in localStorage/sessionStorage/URL parameters. Never log tokens.
 12. **No console spam in production.** Use `console.log` only in development. Use proper logger in production.
 13. **Comments only when useful.** Comment WHY, not WHAT. The code itself should be readable.
-14. **Consistent API response format.** All endpoints use `{ success, data, error, meta }` format.
+14. **Consistent API response format.** Success/error envelopes follow docs/05; health has a simple status shape.
 15. **Reusable functions.** Don't repeat logic. Extract shared code to utils or services.
 16. **Separation of concerns.** Routes → Controllers → Services → Models. No business logic in routes or controllers.
 17. **Avoid premature abstraction.** Don't create abstractions until you need them in 2+ places.
 18. **Accessibility.** All interactive elements keyboard accessible, proper ARIA labels, focus management.
-19. **Responsive design.** Test all layouts at 320px, 768px, 1024px, and 1440px widths.
+19. **Responsive design.** Test all layouts at 320px, 375px, 768px, 1024px, and 1440px widths.
 20. **Security review.** Before marking any auth/security code complete, review against OWASP top 10.
 
 ### Testing Standards
 
 21. **Tests for critical business logic.** At minimum: auth flows, voting atomicity, authorization.
 22. **Test error paths.** Don't just test happy paths. Test validation errors, unauthorized access, edge cases.
-23. **No test code in production.** Test files in dedicated `tests/` directory.
+23. **No test code in production.** Server tests in tests/; client tests colocated in __tests__/.
 
 ### Code Formatting
 
-24. **Linting:** ESLint with TypeScript rules.
-25. **Formatting:** Prettier with consistent config.
+24. **Linting:** Oxlint with TypeScript/React plugins as configured.
+25. **Formatting:** Preserve existing formatting; no standalone formatter is configured.
 26. **Run lint before commit.**
 
 ### Git Discipline

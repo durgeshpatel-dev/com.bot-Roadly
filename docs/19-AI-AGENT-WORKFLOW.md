@@ -56,7 +56,7 @@ flowchart TD
 
 ### Step 7: Run Checks/Tests
 - `npm run lint` — fix any lint errors
-- `npx tsc --noEmit` — fix any type errors
+- `npm run typecheck` — fix any type errors
 - Run relevant test files
 - Manually verify the feature works
 
@@ -131,7 +131,7 @@ Provide a summary:
 | Service | `server/src/services/` | Existing services |
 | Model | `server/src/models/` | Existing models |
 | Middleware | `server/src/middleware/` | Existing middleware |
-| Validator | `server/src/validators/` | Existing validators |
+| Validator | `server/src/middleware/validations/` | Existing validators |
 | Utility | `server/src/utils/` | Existing utils |
 | Types | `*/src/types/` | Existing types |
 | Test | `server/tests/` | Existing tests |

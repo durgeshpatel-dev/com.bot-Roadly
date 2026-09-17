@@ -1,32 +1,20 @@
-# React + TypeScript + Vite
+# Roadly client
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React/TypeScript frontend for Roadly. Start with the [root README](../README.md) for installation, environment, MongoDB, authentication, and end-to-end setup.
 
-Currently, two official plugins are available:
+From the repository root:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```sh
+npm run dev -w client
+npm run test -w client
+npm run typecheck -w client
+npm run lint -w client
+npm run build -w client
+npm run preview -w client
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Copy `.env.example` to `.env`; `VITE_API_URL` points to the API including `/api`. Vite values are public build-time configuration. Never add credentials or signing secrets here.
+
+The app uses Coss/Base UI primitives, Tailwind v4, TanStack Query, React Router, Axios, and safe Markdown rendering. Routes and query ownership are documented in [frontend architecture](../docs/07-FRONTEND-ARCHITECTURE.md). Tests are colocated under `src/**/__tests__`. Production output is `dist/`; configure SPA fallback for deep links. `vercel.json` supplies that fallback and static response headers.
+
+Access tokens stay in memory; refresh uses an httpOnly cookie. Only the theme preference is persisted in localStorage.

@@ -67,19 +67,19 @@ client/src/components/{feature}/ → Feature-specific components
 client/src/pages/               → One component per route
 client/src/hooks/               → Custom hooks
 client/src/api/                 → API client functions
-client/src/contexts/            → React Context (auth)
+client/src/context/             → React Context (auth)
 server/src/routes/              → Route definitions
 server/src/controllers/         → Request/response handling
 server/src/services/            → Business logic
 server/src/models/              → Mongoose schemas
 server/src/middleware/           → Auth, validation, errors
-server/src/validators/           → Input validation schemas
+server/src/middleware/validations/ → Input validation schemas
 ```
 
 ## Key Technical Decisions
 - Voting uses atomic MongoDB ops: `$addToSet`, `$pull`, `$inc` on embedded voters array
 - Pagination: Offset-based with page numbers
 - Comments: Adjacency list with 2-level max depth
-- Validation: Zod (shared between client/server)
+- Validation: Zod in both apps; separate aligned schemas, server authoritative
 - Server state: TanStack Query with optimistic updates for voting
 - Auth: Dual JWT (access 15min in-memory + refresh 7d httpOnly cookie) with rotation

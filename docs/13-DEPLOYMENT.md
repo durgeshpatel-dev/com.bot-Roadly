@@ -1,263 +1,73 @@
-# 13 — DEPLOYMENT
+# 13 — Deployment runbook
 
-## Deployment Architecture
+Deployment configuration is prepared. No hosted deployment, provider account, email integration or live URL is claimed. Hosting, database credentials and domains require operator-owned accounts. Check current provider pricing before choosing a plan.
 
-```mermaid
-graph LR
-    subgraph Frontend
-        V[Vercel / Netlify]
-    end
+## Build and run
 
-    subgraph Backend
-        R[Render / Railway]
-    end
+Use Node 24.x and the root workspace lockfile:
 
-    subgraph Database
-        MA[MongoDB Atlas]
-    end
-
-    Browser -->|HTTPS| V
-    V -->|API Requests| R
-    R -->|Mongoose| MA
+```sh
+npm ci
+npm run check
+npm run build
+npm start -w server
 ```
 
----
+Backend native-host build: npm ci && npm run build -w server. Start: npm start -w server. Build with development dependencies available. Compiled entry: server/dist/server.js. The server connects before listening and handles SIGTERM/SIGINT gracefully.
 
-## Service Selection
+Root Dockerfile builds the backend in stages, prunes development dependencies and runs as node:
 
-### Frontend Hosting 🟡 RECOMMENDED
-
-| Option | Pros | Cons | Recommendation |
-|--------|------|------|---------------|
-| **Vercel** | Free tier, automatic deploys from Git, optimized for React/Vite, preview deploys | Cold starts minimal | ✅ RECOMMENDED |
-| **Netlify** | Free tier, easy setup, form handling | Slightly less optimized for SPA routing | ✅ Alternative |
-| **Render** | Static site hosting available | Better suited for backend | ❌ Not preferred |
-
-**Selected: Vercel** — Best free-tier experience for Vite/React apps. Automatic HTTPS, preview deploys, zero-config.
-
-### Backend Hosting 🟡 RECOMMENDED
-
-| Option | Pros | Cons | Recommendation |
-|--------|------|------|---------------|
-| **Render** | Free tier (with limitations), Docker support, auto-deploy from Git, easy env vars | Free tier spins down after inactivity (cold starts) | ✅ RECOMMENDED |
-| **Railway** | Generous free tier, easy setup, PostgreSQL/MongoDB add-ons | Credit-based free tier | ✅ Alternative |
-| **Fly.io** | Global edge, Docker | More complex setup | ❌ Overkill for assessment |
-
-**Selected: Render** — Simple setup, free tier sufficient for assessment, supports Node.js natively.
-
-> [!WARNING]
-> Render's free tier spins down after 15 minutes of inactivity. First request after spin-down takes ~30 seconds. This is acceptable for an assessment project. Mention this limitation in README.
-
-### Database Hosting 🟡 RECOMMENDED
-
-| Option | Pros | Cons | Recommendation |
-|--------|------|------|---------------|
-| **MongoDB Atlas** | Free M0 cluster (512MB), managed, backups, Atlas Search | 512MB limit on free tier | ✅ RECOMMENDED |
-| **Self-hosted** | Full control | Requires server management | ❌ Not practical |
-
-**Selected: MongoDB Atlas** — Free M0 cluster is sufficient. Mongoose connects with a connection string.
-
----
-
-## Environment Variables
-
-### Server (.env)
-
-```env
-# Application
-NODE_ENV=production
-PORT=5000
-
-# Database
-MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/roadly?retryWrites=true&w=majority
-
-# JWT Secrets (generate unique random strings)
-JWT_ACCESS_SECRET=<random-64-char-string>
-JWT_REFRESH_SECRET=<different-random-64-char-string>
-JWT_ACCESS_EXPIRY=15m
-JWT_REFRESH_EXPIRY=7d
-
-# Client
-CLIENT_URL=https://roadly.vercel.app
-
-# Rate Limiting (optional)
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX=100
+```sh
+docker build -t roadly-api .
+docker run --env-file /secure/location/roadly.env -p 5000:5000 roadly-api
 ```
 
-### Client (.env)
+Docker is unavailable on the release workstation; build and smoke-test this container before using it.
 
-```env
-VITE_API_URL=https://roadly-api.onrender.com/api
-```
+## Environment and frontend
 
-> [!CAUTION]
-> The `.env` file is NEVER committed to Git. Use `.env.example` with placeholder values.
+| Variable | Production configuration |
+|---|---|
+| NODE_ENV | production |
+| PORT | Host-assigned port; default 5000 |
+| MONGODB_URI | Authenticated connection to the intended MongoDB database |
+| JWT_SECRET | Random access secret, at least 32 characters |
+| JWT_REFRESH_SECRET | Different random refresh secret, at least 32 characters |
+| CLIENT_URL | Exact HTTPS frontend origin, no trailing slash/path |
+| COOKIE_SAME_SITE | strict default; lax/none according to topology |
+| TRUST_PROXY | Actual trusted ingress hops, 0–5 |
+| ADMIN_EMAIL/PASSWORD/NAME | Temporary private seed inputs |
 
----
+Access/refresh expiry is fixed at 15m/7d. There are no JWT_ACCESS_SECRET, JWT_ACCESS_EXPIRY, JWT_REFRESH_EXPIRY, EMAIL_SIMULATION or RATE_LIMIT_MAX switches. Use current per-app .env.example files.
 
-## Production Configuration Changes
+Client VITE_API_URL is public build-time configuration, e.g. https://api.your-domain.example/api. Rebuild after changing it. Build with npm run build -w client and publish client/dist. Serve index.html for nested routes without rewriting missing assets to HTML.
 
-### Cookie Settings (Production)
+client/vercel.json provides SPA rewrites/security headers. For Vercel, select client as the app root, allow workspace source outside that directory, use the committed root npm lockfile for installation, npm run build, output dist. Verify actual installation logs use that lockfile. No Vercel project/domain has been provisioned.
 
-```javascript
-{
-  httpOnly: true,
-  secure: true,           // HTTPS only
-  sameSite: 'none',       // Cross-origin (different domains for frontend/backend)
-  path: '/api/auth',
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-  domain: '.onrender.com' // or omit for same-site
-}
-```
+## TLS, cookies and CORS
 
-> [!IMPORTANT]
-> If frontend (Vercel) and backend (Render) are on different domains, `sameSite` must be `'none'` (not `'strict'`), and `secure` must be `true`. This requires HTTPS on both sides.
+Use HTTPS for frontend/API. Credentialed CORS allows CLIENT_URL only. Same-site app/api subdomains can use strict cookies. Unrelated domains need production Secure cookies, SameSite=none and the implemented exact-Origin check; browser third-party-cookie restrictions may still interfere. Same-origin proxying avoids that dependency.
 
-🟠 IMPLEMENTATION DECISION: If this causes issues, consider:
-- Proxying API through Vercel rewrites (same origin)
-- Deploying frontend and backend on the same domain (e.g., both on Render)
+Cookies remain httpOnly, path /api/auth, no Domain override. Preserve Set-Cookie at the ingress, forward client IP correctly and set TRUST_PROXY to the real chain. Never use a public-suffix cookie domain. Verify refresh/reload/logout in the target browser, not merely the login response.
 
-### CORS (Production)
+## Database/admin
 
-```javascript
-{
-  origin: process.env.CLIENT_URL, // e.g., 'https://roadly.vercel.app'
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}
-```
+Use a dedicated least-privilege database user and restrict network access to application egress where available. Configure backups/recovery. Verify declared indexes; follow [database upgrade precautions](04-DATABASE-DESIGN.md). Removing a schema declaration does not drop an existing index.
 
----
+Privately supply admin values and run npm run seed:admin -w server while dev dependencies exist. With compiled artifacts and production env already supplied, run node server/dist/seeds/admin.seed.js. Seed creates a verified admin, leaves an existing admin unchanged and refuses promotion of an existing regular account. Remove temporary seed credentials afterward.
 
-## Build Process
+## Email/logging and final smoke
 
-### Client Build
+Development simulation is disabled in production. Add private email delivery at server/src/utils/emailSimulation.ts or an explicit adapter before public verification/recovery, preserving hashed expiring one-use tokens and generic responses. Never publish terminal token links. Operational messages exclude credentials/connection strings; no hosted error tracker or monitoring account is configured.
 
-```bash
-cd client
-npm run build     # Vite produces dist/ directory
-```
+- [ ] Build the committed release and start in production mode.
+- [ ] GET /api/health returns 200 `{success:true,data:{status:"ok",dbStatus:"connected",uptime}}`; disconnected returns a 503 error envelope.
+- [ ] Feed/direct nested routes work over HTTPS.
+- [ ] Exact-origin CORS works; foreign auth Origins fail.
+- [ ] Login sets Secure/httpOnly cookie; refresh rotates; reload restores; logout clears.
+- [ ] Private verification/reset delivery works and links are single use.
+- [ ] Disposable request/vote/comment/reply/status flows work.
+- [ ] Admin status updates reach roadmap/activity/insights; user RBAC rejects access.
+- [ ] Mobile/theme, ingress logs, restart, backups and alerting ownership checked.
 
-Vercel handles this automatically on push.
-
-### Server Build (if using TypeScript)
-
-```bash
-cd server
-npm run build     # Compile TypeScript to dist/
-npm start         # Run compiled JavaScript
-```
-
-**`package.json` scripts:**
-```json
-{
-  "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "seed:admin": "tsx src/seeds/admin.seed.ts"
-  }
-}
-```
-
----
-
-## Deployment Checklist
-
-### Pre-Deployment
-
-- [ ] All features working locally
-- [ ] All critical tests passing
-- [ ] `.env.example` files updated
-- [ ] No secrets in source code (`git grep -i "password\|secret\|key"`)
-- [ ] `.gitignore` includes `.env`, `node_modules`, `dist`
-- [ ] README has setup instructions
-
-### Database Setup
-
-- [ ] MongoDB Atlas account created
-- [ ] M0 free cluster created
-- [ ] Database user created with read/write access
-- [ ] Network access configured (allow from deployment IPs or 0.0.0.0/0 for assessment)
-- [ ] Connection string obtained
-- [ ] Indexes verified on Atlas
-
-### Backend Deployment (Render)
-
-- [ ] Render account created
-- [ ] New Web Service created
-- [ ] Connected to Git repository
-- [ ] Build command: `cd server && npm install && npm run build`
-- [ ] Start command: `cd server && npm start`
-- [ ] Environment variables set
-- [ ] Health check endpoint configured
-- [ ] Deploy successful — API responds on `/api/health`
-
-### Frontend Deployment (Vercel)
-
-- [ ] Vercel account created
-- [ ] Import from Git repository
-- [ ] Root directory set to `client/`
-- [ ] Build command: `npm run build`
-- [ ] Output directory: `dist`
-- [ ] Environment variables set (`VITE_API_URL`)
-- [ ] Deploy successful — app loads in browser
-
-### Post-Deployment Verification
-
-- [ ] Frontend loads without errors
-- [ ] API health check returns 200
-- [ ] Signup flow works
-- [ ] Login flow works (tokens + cookies)
-- [ ] Feature request creation works
-- [ ] Voting works
-- [ ] Comments work
-- [ ] Roadmap displays correctly
-- [ ] Admin panel accessible
-- [ ] Search works
-- [ ] CORS configured correctly (no blocked requests)
-- [ ] Cookies set correctly (check DevTools)
-
----
-
-## Health Check Endpoint 🟡 RECOMMENDED
-
-```
-GET /api/health
-
-Response: 200 OK
-{
-  "success": true,
-  "data": {
-    "status": "healthy",
-    "environment": "production",
-    "timestamp": "2026-09-16T00:00:00.000Z",
-    "uptime": 12345
-  }
-}
-```
-
-Use this for Render's health check configuration and monitoring.
-
----
-
-## Logging in Production 🟡 RECOMMENDED
-
-- Remove all `console.log` debug statements
-- Keep `console.error` for unexpected errors
-- Use `morgan('combined')` for HTTP request logging
-- 🔵 OPTIONAL: Use `winston` or `pino` for structured logging
-
----
-
-## Known Limitations
-
-| Limitation | Impact | Mitigation |
-|------------|--------|------------|
-| Render free tier cold starts | ~30s first load after inactivity | Mention in README |
-| MongoDB Atlas M0 (512MB) | Storage limit | Sufficient for assessment |
-| No custom domain | URLs are `*.vercel.app` / `*.onrender.com` | Acceptable for assessment |
-| No CI/CD pipeline | Manual deploys via Git push | Auto-deploy on push configured |
-| No monitoring | No error tracking or APM | Acceptable for assessment |
+[Release evidence](21-RELEASE-REPORT.md) distinguishes local checks from deployment. Add live and public video URLs only after verifying them.
