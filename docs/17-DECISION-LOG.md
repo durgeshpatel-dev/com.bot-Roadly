@@ -406,3 +406,25 @@ Each decision follows this template:
 - ✅ Audit history remains intact
 - ❌ Requires slightly more complex rendering logic (e.g., checking `isDeleted`)
 - ❌ Database retains the deleted document
+
+---
+
+### DEC-016: Phase 9 Activity Timeline and Admin Insights
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-09-17 |
+| **Status** | ACCEPTED |
+| **Impacted Components** | Activity model/API, post detail UI, admin UI, reporting queries |
+
+**Context:** The approved Phase 9 scope adds a public product activity timeline and lightweight admin analytics without changing existing Post response contracts or introducing optional social/product features.
+
+**Selected:** A separate `Activity` collection records only server-generated `post-created`, `status-changed`, and `comment-created` events. The public activity endpoint is paginated at `GET /api/posts/:id/activity?page=1&limit=20` and returns only safe actor identity and status metadata. Admin insights are served by the admin-only `GET /api/admin/stats` endpoint using bounded read-only MongoDB aggregations and limited top-request queries.
+
+**Reason:** Separate activity records preserve the existing Post schema and response shape while providing a durable, auditable timeline. A bounded on-demand aggregation keeps analytics lightweight and avoids a second source of truth.
+
+**Trade-offs:**
+- ✅ Existing authentication, authorization, voting, comments, and Post contracts remain unchanged
+- ✅ Activity and stats responses exclude passwords, tokens, sessions, and voter arrays
+- ✅ No analytics collection or unapproved feature area is introduced
+- ❌ Activity recording is best-effort from core mutations so an optional timeline failure cannot fail post, status, or comment operations

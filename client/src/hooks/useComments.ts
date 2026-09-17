@@ -20,6 +20,7 @@ export const useComments = (postId: string) => {
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: postQueryKey });
       queryClient.invalidateQueries({ queryKey: postsQueryKey });
+      queryClient.invalidateQueries({ queryKey: ['activity', postId] });
       toastManager.add({ type: 'success', title: 'Comment added' });
     },
     onError: (error: any) => {
@@ -45,6 +46,7 @@ export const useComments = (postId: string) => {
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: postQueryKey });
       queryClient.invalidateQueries({ queryKey: postsQueryKey });
+      queryClient.invalidateQueries({ queryKey: ['activity', postId] });
       toastManager.add({ type: 'success', title: 'Comment deleted' });
     },
     onError: (error: any) => {

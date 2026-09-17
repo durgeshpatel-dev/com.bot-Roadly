@@ -5,6 +5,7 @@ import type {
   PostListMeta,
   PostStatus,
 } from '../types/post.types';
+import type { AdminStats } from '../types/admin.types';
 
 export interface AdminPostsResponse {
   posts: AdminPost[];
@@ -23,5 +24,10 @@ export const adminApi = {
   updatePostStatus: async (postId: string, status: PostStatus) => {
     const response = await apiClient.patch(`/admin/posts/${postId}/status`, { status });
     return response.data.data.post as Pick<AdminPost, '_id' | 'status' | 'updatedAt'>;
+  },
+
+  getStats: async (): Promise<AdminStats> => {
+    const response = await apiClient.get('/admin/stats');
+    return response.data.data.stats;
   },
 };

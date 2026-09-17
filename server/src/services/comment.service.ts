@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Comment, IComment } from '../models/Comment';
 import { Post } from '../models/Post';
 import { AppError } from '../utils/AppError';
+import { activityService } from './activity.service';
 
 export class CommentService {
   async createComment(postId: string, userId: string, content: string, parentCommentId?: string | null) {
@@ -43,6 +44,7 @@ export class CommentService {
     await comment.save();
 
     await Post.updateOne({ _id: postId }, { $inc: { commentCount: 1 } });
+    await activityService.record({ postId, type: 'comment-created', actorId: userId }).catch(() => undefined);
 
     return comment.populate('author', 'name _id');
   }

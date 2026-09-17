@@ -151,7 +151,7 @@
 | Public roadmap frontend and responsive layout | COMPLETED | P0 | Passing |
 | Development-only admin seed utility | COMPLETED | P0 | Typechecked |
 
-> Phase 7/8 completion reflects the approved combined Phase 6 scope. Dashboard analytics/statistics are intentionally deferred and were not implemented.
+> Phase 7/8 completion reflects the approved combined Phase 6 scope. Dashboard analytics/statistics were intentionally deferred from Phase 6 and are delivered in the approved optional Phase 9 scope below.
 
 ---
 
@@ -170,6 +170,22 @@
 | Existing threaded comment integration | COMPLETED | Passing |
 | Responsive Coss UI feed and detail experience | COMPLETED | Build/lint passing |
 | Frontend and backend regression suites | COMPLETED | Passing |
+
+---
+
+## Current Project Phase 9: Approved Optional Product Enhancements
+
+| Task | Status | Priority | Test Status |
+|------|--------|----------|-------------|
+| Core Phases 1–8 Git checkpoint | COMPLETED | P0 | Commit `3c1d33d`, pushed |
+| Separate Activity collection and server-generated event recording | COMPLETED | P1 | Passing |
+| Paginated public feature activity endpoint | COMPLETED | P1 | Passing |
+| Public feature-detail activity timeline | COMPLETED | P1 | Passing |
+| Admin-only bounded stats endpoint | COMPLETED | P1 | Passing |
+| Lightweight admin insights dashboard | COMPLETED | P1 | Passing |
+| Optional feature security and regression verification | COMPLETED | P0 | Passing |
+
+> Explicitly excluded from Phase 9: user profiles, watch/follow, notification center, release announcements, and a new trending algorithm.
 
 ---
 

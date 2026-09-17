@@ -11,6 +11,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Skeleton } from '../components/ui/skeleton';
+import { ActivityTimeline } from '../components/activity/ActivityTimeline';
 
 function DetailSkeleton() {
   return (
@@ -84,6 +85,8 @@ export default function PostDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ActivityTimeline postId={post._id} />
 
       <section aria-labelledby="discussion-heading">
         <h2 id="discussion-heading" className="sr-only">Feature discussion</h2>

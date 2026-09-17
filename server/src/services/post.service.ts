@@ -2,6 +2,7 @@ import { Post, IPost } from '../models/Post';
 import { Comment } from '../models/Comment';
 import { AppError } from '../utils/AppError';
 import mongoose from 'mongoose';
+import { activityService } from './activity.service';
 
 export class PostService {
   async createPost(userId: string, data: Partial<IPost>) {
@@ -15,6 +16,7 @@ export class PostService {
     });
     
     await post.save();
+    await activityService.record({ postId: post._id, type: 'post-created', actorId: userId }).catch(() => undefined);
     return post.populate('author', 'name _id');
   }
 

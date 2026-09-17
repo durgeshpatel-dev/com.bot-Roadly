@@ -6,6 +6,7 @@ import { usePost } from '../../hooks/usePost';
 
 vi.mock('../../hooks/usePost', () => ({ usePost: vi.fn() }));
 vi.mock('../../components/comments/CommentList', () => ({ CommentList: ({ postId }: { postId: string }) => <div>Discussion for {postId}</div> }));
+vi.mock('../../components/activity/ActivityTimeline', () => ({ ActivityTimeline: ({ postId }: { postId: string }) => <div>Activity for {postId}</div> }));
 vi.mock('../../components/posts/VoteButton', () => ({ VoteButton: () => <button type="button">Vote</button> }));
 
 const mockedUsePost = vi.mocked(usePost);
@@ -40,5 +41,6 @@ describe('PostDetailPage', () => {
     expect(screen.getByText('In Progress')).toBeTruthy();
     expect(screen.getByText('Vote')).toBeTruthy();
     expect(screen.getByText('Discussion for post-1')).toBeTruthy();
+    expect(screen.getByText('Activity for post-1')).toBeTruthy();
   });
 });

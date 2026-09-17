@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../api/admin.api';
 import type { AdminPostFilters, PostStatus } from '../types/post.types';
+import type { AdminStats } from '../types/admin.types';
 import { toastManager } from '../components/ui/toast';
 
 export const useAdminPosts = (filters: AdminPostFilters = {}) =>
@@ -8,6 +9,11 @@ export const useAdminPosts = (filters: AdminPostFilters = {}) =>
     queryKey: ['admin', 'posts', filters],
     queryFn: () => adminApi.getPosts(filters),
   });
+
+export const useAdminStats = () => useQuery<AdminStats>({
+  queryKey: ['admin', 'stats'],
+  queryFn: adminApi.getStats,
+});
 
 export const useUpdatePostStatus = () => {
   const queryClient = useQueryClient();
@@ -19,6 +25,7 @@ export const useUpdatePostStatus = () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       queryClient.invalidateQueries({ queryKey: ['roadmap'] });
+      queryClient.invalidateQueries({ queryKey: ['activity'] });
       toastManager.add({ type: 'success', title: 'Status updated' });
     },
     onError: (error: any) => {
