@@ -4,7 +4,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: ['./tests/setup.ts'],
+    setupFiles: ['../testing/server/setup.ts'],
+    include: ['../testing/server/**/*.test.ts'],
     fileParallelism: false, // Ensure tests don't step on each other's DB
     hookTimeout: 90000, // Includes isolated MongoDB startup and index initialization.
     env: {

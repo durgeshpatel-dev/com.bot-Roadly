@@ -8,7 +8,7 @@ import { ToastProvider } from './components/ui/toast';
 import { ThemeProvider } from './context/ThemeContext';
 import { SiteHeader } from './components/layout/SiteHeader';
 import { FeatureSubmissionProvider } from './context/FeatureSubmissionContext';
-import { Skeleton } from './components/ui/skeleton';
+import { PremiumLoader } from './components/ui/premium-loader';
 
 const Home = lazy(() => import('./pages/Home'));
 const PostDetailPage = lazy(() => import('./pages/PostDetailPage'));
@@ -36,7 +36,7 @@ function AppContent() {
     <div className="app-shell">
       <SiteHeader />
       <main id="main-content" className="site-container page-shell">
-        <Suspense fallback={<div role="status" aria-label="Loading page"><Skeleton className="h-64 w-full rounded-2xl" /><span className="sr-only">Loading page...</span></div>}>
+        <Suspense fallback={<div className="flex h-[50vh] items-center justify-center"><PremiumLoader /></div>}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/posts/:id" element={<PostDetailPage />} />
