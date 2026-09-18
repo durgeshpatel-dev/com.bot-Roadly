@@ -25,10 +25,10 @@ export function AdminPostRow({ post, isUpdating, onStatusChange }: AdminPostRowP
   const statusOptions = [post.status, ...POST_STATUS_TRANSITIONS[post.status]];
 
   return (
-    <tr className="border-b last:border-0">
-      <td className="p-3 align-top">
-        <div className="font-medium">{post.title}</div>
-        <div className="mt-1 text-xs text-muted-foreground">by {post.author.name}</div>
+    <tr className="border-b border-border/50 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+      <td className="p-4 align-top">
+        <div className="font-semibold text-slate-900 dark:text-slate-100">{post.title}</div>
+        <div className="mt-1 text-xs text-slate-500 font-medium">by {post.author.name}</div>
       </td>
       <td className="p-3 align-top">
         <div className="flex flex-wrap gap-1">

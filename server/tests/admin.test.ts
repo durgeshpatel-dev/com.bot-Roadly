@@ -73,14 +73,12 @@ describe('Admin API', () => {
     expect(response.body.data.posts[0]).not.toHaveProperty('voters');
   });
 
-  it.each([
-    ['under-review', 'planned'],
-    ['planned', 'under-review'],
-    ['planned', 'in-progress'],
-    ['in-progress', 'planned'],
-    ['in-progress', 'completed'],
-    ['completed', 'in-progress'],
-  ] as const)('allows %s -> %s', async (currentStatus, nextStatus) => {
+  const statuses = ['under-review', 'planned', 'in-progress', 'completed', 'rejected'] as const;
+  const allTransitions = statuses.flatMap((current) =>
+    statuses.filter((next) => current !== next).map((next) => [current, next] as const)
+  );
+
+  it.each(allTransitions)('allows %s -> %s', async (currentStatus, nextStatus) => {
     const post = await Post.create({
       title: `${currentStatus} Request`,
       description: 'A request used to test admin status transitions.',
@@ -96,31 +94,6 @@ describe('Admin API', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data.post.status).toBe(nextStatus);
-  });
-
-  it.each([
-    ['under-review', 'in-progress'],
-    ['under-review', 'completed'],
-    ['planned', 'completed'],
-    ['in-progress', 'under-review'],
-    ['completed', 'planned'],
-    ['completed', 'under-review'],
-  ] as const)('rejects non-adjacent transition %s -> %s', async (currentStatus, nextStatus) => {
-    const post = await Post.create({
-      title: `${currentStatus} Request`,
-      description: 'A request used to test invalid admin transitions.',
-      categories: ['general'],
-      author: userId,
-      status: currentStatus,
-    });
-
-    const response = await request(app)
-      .patch(`/api/admin/posts/${post.id}/status`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send({ status: nextStatus });
-
-    expect(response.status).toBe(400);
-    expect((await Post.findById(post.id))?.status).toBe(currentStatus);
   });
 
   it('rejects invalid status input and nonexistent posts', async () => {

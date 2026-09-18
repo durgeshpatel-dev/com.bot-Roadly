@@ -81,6 +81,7 @@ describe('Admin stats API', () => {
         planned: 1,
         'in-progress': 0,
         completed: 1,
+        rejected: 0,
       },
     });
     expect(response.body.data.stats.topVoted[0]).toMatchObject({ title: 'Most voted request', voteCount: 8 });

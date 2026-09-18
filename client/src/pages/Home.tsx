@@ -124,7 +124,7 @@ export default function Home() {
 
         <section className="min-w-0 space-y-5">
           <div className="content-toolbar flex flex-col gap-3 sm:flex-row sm:items-center">
-            <SearchInput key={query.search} value={query.search} onChange={handleSearchChange} />
+            <SearchInput value={query.search} onChange={handleSearchChange} />
             <div className="flex min-w-0 gap-2 sm:shrink-0">
               <SortSelect value={query.sort} onChange={(sort) => setQuery((current) => ({ ...current, page: 1, sort }))} />
               <Button variant="outline" className="lg:hidden" onClick={() => setFiltersOpen(true)}>

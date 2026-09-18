@@ -5,7 +5,7 @@ import { POST_CATEGORIES } from '../../types/post.types';
 import { toastManager } from '../ui/toast';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogPanel } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
@@ -75,35 +75,42 @@ export function PostForm({ open, onOpenChange }: { open: boolean; onOpenChange: 
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => nextOpen ? onOpenChange(true) : close()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Submit a feature request</DialogTitle>
-          <DialogDescription>Describe the problem or idea you would like Roadly to consider.</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-5">
-          {error && <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">{error}</p>}
-          <div className="space-y-2">
-            <Label htmlFor="feature-title">Title</Label>
-            <Input id="feature-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={150} placeholder="What should Roadly improve?" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="feature-description">Description</Label>
-            <Textarea id="feature-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={5000} placeholder="Explain the problem and the outcome you want. Markdown is supported." className="min-h-32 resize-y" />
-          </div>
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-medium">Categories</legend>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {POST_CATEGORIES.map((category) => (
-                <label key={category} className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={categories.includes(category)} onCheckedChange={(checked) => toggleCategory(category, Boolean(checked))} />
-                  <span>{categoryLabels[category]}</span>
-                </label>
-              ))}
+      <DialogContent className="sm:max-w-2xl bg-card/95 backdrop-blur-xl border border-white/10 dark:border-white/5 shadow-2xl">
+        <form onSubmit={submit} className="contents">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-slate-900 dark:text-slate-50">Submit a feature request</DialogTitle>
+            <DialogDescription className="text-slate-500">Describe the problem or idea you would like Roadly to consider.</DialogDescription>
+          </DialogHeader>
+          
+          <DialogPanel className="space-y-6">
+            {error && <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive font-medium shadow-sm" role="alert">{error}</p>}
+            
+            <div className="space-y-2">
+              <Label htmlFor="feature-title" className="text-slate-700 dark:text-slate-300">Title</Label>
+              <Input id="feature-title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={150} placeholder="What should Roadly improve?" className="h-11 bg-background/50 focus:bg-background transition-colors" />
             </div>
-          </fieldset>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={close} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : 'Submit request'}</Button>
+            
+            <div className="space-y-2">
+              <Label htmlFor="feature-description" className="text-slate-700 dark:text-slate-300">Description</Label>
+              <Textarea id="feature-description" value={description} onChange={(event) => setDescription(event.target.value)} maxLength={5000} placeholder="Explain the problem and the outcome you want. Markdown is supported." className="min-h-32 resize-y bg-background/50 focus:bg-background transition-colors p-3" />
+            </div>
+            
+            <fieldset className="space-y-3 rounded-xl border border-border/50 bg-muted/20 p-4">
+              <legend className="text-sm font-semibold text-slate-900 dark:text-slate-50 px-1 -ml-1">Categories</legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {POST_CATEGORIES.map((category) => (
+                  <label key={category} className="flex items-center gap-3 text-sm cursor-pointer hover:bg-muted/50 p-2 -m-2 rounded-lg transition-colors">
+                    <Checkbox checked={categories.includes(category)} onCheckedChange={(checked) => toggleCategory(category, Boolean(checked))} className="data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600" />
+                    <span className="text-slate-700 dark:text-slate-300 font-medium">{categoryLabels[category]}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </DialogPanel>
+          
+          <DialogFooter className="bg-muted/30">
+            <Button type="button" variant="outline" onClick={close} disabled={isSubmitting} className="border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800">Cancel</Button>
+            <Button type="submit" disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20">{isSubmitting ? 'Submitting...' : 'Submit request'}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

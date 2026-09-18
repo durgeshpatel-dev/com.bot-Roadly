@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Alert } from '../../components/ui/alert';
 import { Button } from '../../components/ui/button';
 import { Empty, EmptyDescription, EmptyTitle } from '../../components/ui/empty';
@@ -13,16 +14,27 @@ import { POST_STATUS_LABELS } from '../../types/post.types';
 import type { PostStatus } from '../../types/post.types';
 
 export default function AdminPostsPage() {
-  const [filters, setFilters] = useState<AdminPostFilters>({ page: 1, limit: 50 });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status') || undefined;
+  
+  const [filters, setFilters] = useState<AdminPostFilters>({ page: 1, limit: 50, status: initialStatus });
   const postsQuery = useAdminPosts(filters);
   const statusMutation = useUpdatePostStatus();
 
   const setStatusFilter = (value: string | null) => {
+    const newStatus = value && value !== 'all' ? value : undefined;
     setFilters((current) => ({
       ...current,
       page: 1,
-      status: value && value !== 'all' ? value : undefined,
+      status: newStatus,
     }));
+    
+    if (newStatus) {
+      searchParams.set('status', newStatus);
+    } else {
+      searchParams.delete('status');
+    }
+    setSearchParams(searchParams);
   };
 
   return (
@@ -42,6 +54,7 @@ export default function AdminPostsPage() {
               <SelectItem value="planned">Planned</SelectItem>
               <SelectItem value="in-progress">In Progress</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
             </SelectContent>
           </Select>
         )}
@@ -73,7 +86,7 @@ export default function AdminPostsPage() {
 
       {!postsQuery.isLoading && !postsQuery.isError && (postsQuery.data?.posts.length || 0) > 0 && (
         <div className="space-y-4">
-          <div className="surface overflow-x-auto">
+          <div className="glass-panel shadow-lg overflow-x-auto rounded-3xl bg-card/60 backdrop-blur-md border-transparent">
             <Table>
               <TableHeader>
                 <TableRow>

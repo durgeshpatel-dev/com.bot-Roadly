@@ -53,10 +53,10 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background">
+    <header className="sticky top-0 z-40 glass-panel border-b-0 rounded-b-2xl mx-2 sm:mx-4 mt-2">
       <div className="site-container flex h-16 items-center justify-between gap-3">
-        <NavLink to="/" className="flex items-center gap-2 font-heading text-lg font-semibold tracking-tight">
-          <span className="grid size-7 place-items-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">R</span>
+        <NavLink to="/" className="flex items-center gap-2 font-heading text-lg font-semibold tracking-tight transition-transform hover:scale-105">
+          <span className="grid size-7 place-items-center rounded-lg bg-primary text-xs font-bold text-primary-foreground shadow-md shadow-primary/20">R</span>
           Roadly
         </NavLink>
 

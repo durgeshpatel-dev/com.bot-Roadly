@@ -72,24 +72,24 @@
   --success-foreground: var(--color-emerald-700);
   --warning: var(--color-amber-500);
   --warning-foreground: var(--color-amber-700);
-  --accent: --alpha(var(--color-black) / 4%);
-  --accent-foreground: var(--color-neutral-800);
-  --background: var(--color-white);
-  --border: --alpha(var(--color-black) / 8%);
+  --accent: --alpha(var(--color-slate-900) / 5%);
+  --accent-foreground: var(--color-indigo-700);
+  --background: var(--color-slate-50);
+  --border: --alpha(var(--color-slate-900) / 10%);
   --card: var(--color-white);
-  --card-foreground: var(--color-neutral-800);
+  --card-foreground: var(--color-slate-900);
   --destructive: var(--color-red-500);
-  --foreground: var(--color-neutral-800);
-  --input: --alpha(var(--color-black) / 10%);
-  --muted: --alpha(var(--color-black) / 4%);
-  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-black));
+  --foreground: var(--color-slate-900);
+  --input: --alpha(var(--color-slate-900) / 12%);
+  --muted: var(--color-slate-100);
+  --muted-foreground: var(--color-slate-500);
   --popover: var(--color-white);
-  --popover-foreground: var(--color-neutral-800);
-  --primary: var(--color-neutral-800);
-  --primary-foreground: var(--color-neutral-50);
-  --ring: var(--color-neutral-400);
-  --secondary: --alpha(var(--color-black) / 4%);
-  --secondary-foreground: var(--color-neutral-800);
+  --popover-foreground: var(--color-slate-900);
+  --primary: var(--color-indigo-600);
+  --primary-foreground: var(--color-white);
+  --ring: var(--color-indigo-500);
+  --secondary: var(--color-slate-200);
+  --secondary-foreground: var(--color-slate-900);
   --chart-1: var(--color-orange-600);
   --chart-2: var(--color-teal-600);
   --chart-3: var(--color-cyan-900);
@@ -117,24 +117,24 @@
   --success-foreground: var(--color-emerald-400);
   --warning: var(--color-amber-500);
   --warning-foreground: var(--color-amber-400);
-  --accent: --alpha(var(--color-white) / 4%);
-  --accent-foreground: var(--color-neutral-100);
-  --background: color-mix(in srgb, var(--color-neutral-950) 95%, var(--color-white));
-  --border: --alpha(var(--color-white) / 6%);
-  --card: color-mix(in srgb, var(--background) 98%, var(--color-white));
-  --card-foreground: var(--color-neutral-100);
-  --destructive: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
-  --foreground: var(--color-neutral-100);
-  --input: --alpha(var(--color-white) / 8%);
-  --muted: --alpha(var(--color-white) / 4%);
-  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-white));
-  --popover: color-mix(in srgb, var(--background) 98%, var(--color-white));
-  --popover-foreground: var(--color-neutral-100);
-  --primary: var(--color-neutral-100);
-  --primary-foreground: var(--color-neutral-800);
-  --ring: var(--color-neutral-500);
-  --secondary: --alpha(var(--color-white) / 4%);
-  --secondary-foreground: var(--color-neutral-100);
+  --accent: --alpha(var(--color-white) / 10%);
+  --accent-foreground: var(--color-indigo-300);
+  --background: var(--color-slate-950);
+  --border: --alpha(var(--color-white) / 10%);
+  --card: var(--color-slate-900);
+  --card-foreground: var(--color-slate-50);
+  --destructive: var(--color-red-500);
+  --foreground: var(--color-slate-50);
+  --input: --alpha(var(--color-white) / 15%);
+  --muted: --alpha(var(--color-white) / 5%);
+  --muted-foreground: var(--color-slate-400);
+  --popover: var(--color-slate-900);
+  --popover-foreground: var(--color-slate-50);
+  --primary: var(--color-indigo-500);
+  --primary-foreground: var(--color-white);
+  --ring: var(--color-indigo-500);
+  --secondary: --alpha(var(--color-white) / 10%);
+  --secondary-foreground: var(--color-slate-50);
   --chart-1: var(--color-blue-700);
   --chart-2: var(--color-emerald-500);
   --chart-3: var(--color-amber-500);
@@ -193,18 +193,32 @@
 }
 
 @layer components {
-  .app-shell { @apply min-h-screen bg-background text-foreground; }
+  .app-shell {
+    @apply min-h-screen bg-background text-foreground bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))];
+  }
+  .dark .app-shell {
+    @apply bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.25),rgba(255,255,255,0))];
+  }
   .site-container { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
   .page-shell { @apply py-6 sm:py-8 lg:py-10; }
   .page-stack { @apply space-y-6 sm:space-y-8; }
-  .page-eyebrow { @apply text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground; }
+  .page-eyebrow { @apply text-xs font-semibold uppercase tracking-[0.16em] text-indigo-500 dark:text-indigo-400; }
   .page-title { @apply font-heading text-3xl font-semibold tracking-tight sm:text-4xl; }
   .page-description { @apply max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base; }
+  
+  .glass-panel {
+    @apply bg-background/60 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)];
+  }
+  .premium-card-hover {
+    @apply transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-500/30;
+  }
+
   .surface { @apply rounded-2xl border bg-card shadow-xs/5; }
   .surface-subtle { @apply rounded-2xl border bg-muted/40; }
   .content-toolbar { @apply rounded-2xl border bg-card p-3 shadow-xs/5; }
-  .nav-link { @apply rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring; }
-  .nav-link-active { @apply bg-accent text-foreground; }
+  .nav-link { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-slate-200/50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring dark:hover:bg-slate-800/50 dark:hover:text-slate-50; }
+  .nav-link-active { @apply bg-slate-200/50 text-slate-900 dark:bg-slate-800/50 dark:text-slate-50; }
+  .wrap-anywhere { overflow-wrap: anywhere; line-break: anywhere; }
   .auth-shell { @apply flex min-h-[calc(100vh-10rem)] items-center justify-center py-6 sm:py-10; }
   .auth-card { @apply w-full max-w-md; }
   .markdown-content { @apply wrap-anywhere text-sm leading-7; }

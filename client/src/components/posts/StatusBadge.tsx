@@ -2,11 +2,12 @@ import { Badge } from '../ui/badge';
 import type { PostStatus } from '../../types/post.types';
 import { POST_STATUS_LABELS } from '../../types/post.types';
 
-const statusVariants: Record<PostStatus, 'default' | 'info' | 'warning' | 'success'> = {
+const statusVariants: Record<PostStatus, 'default' | 'info' | 'warning' | 'success' | 'error'> = {
   'under-review': 'warning',
   planned: 'info',
   'in-progress': 'default',
   completed: 'success',
+  rejected: 'error',
 };
 
 export function StatusBadge({ status }: { status: PostStatus }) {

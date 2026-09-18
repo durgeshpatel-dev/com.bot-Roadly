@@ -15,7 +15,7 @@ describe('adminApi', () => {
             totalPosts: 1,
             totalVotes: 3,
             totalComments: 2,
-            statusCounts: { 'under-review': 0, planned: 1, 'in-progress': 0, completed: 0 },
+            statusCounts: { 'under-review': 0, planned: 1, 'in-progress': 0, completed: 0, rejected: 0 },
             topVoted: [{ _id: 'post-1', title: 'Request', status: 'planned', voteCount: 3, commentCount: 2 }],
             topDiscussed: [{ _id: 'post-1', title: 'Request', status: 'planned', voteCount: 3, commentCount: 2 }],
           },

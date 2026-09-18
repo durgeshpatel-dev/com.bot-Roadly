@@ -47,7 +47,10 @@ export class PostService {
     }
 
     if (query.search) {
-      filter.$text = { $search: query.search };
+      filter.$or = [
+        { title: { $regex: query.search, $options: 'i' } },
+        { description: { $regex: query.search, $options: 'i' } }
+      ];
     }
 
     let sortOption: any = { createdAt: -1 };

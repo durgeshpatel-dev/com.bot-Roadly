@@ -9,10 +9,10 @@ interface RoadmapColumnProps {
 
 export function RoadmapColumn({ title, posts }: RoadmapColumnProps) {
   return (
-    <section className="surface-subtle min-w-0">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <h2 className="font-heading text-lg font-semibold">{title}</h2>
-        <span className="rounded-full bg-background px-2 py-0.5 text-sm text-muted-foreground">{posts.length}</span>
+    <section className="rounded-2xl border border-slate-200/50 bg-slate-100/40 dark:border-white/5 dark:bg-slate-900/40 min-w-0 shadow-inner">
+      <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-white/5 px-4 py-3 bg-card/40 backdrop-blur-md rounded-t-2xl">
+        <h2 className="font-heading text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h2>
+        <span className="rounded-full bg-slate-200 dark:bg-slate-800 px-2.5 py-0.5 text-sm font-medium text-slate-700 dark:text-slate-300 shadow-sm">{posts.length}</span>
       </div>
       <div className="space-y-3 p-3">
         {posts.length === 0 ? (

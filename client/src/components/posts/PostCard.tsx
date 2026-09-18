@@ -17,11 +17,11 @@ export function PostCard({ post }: { post: PostSummary }) {
   const authorName = post.author?.name || 'Roadly user';
 
   return (
-    <Card className="overflow-hidden transition-shadow hover:shadow-md">
-      <CardHeader className="gap-4 pb-3 sm:flex-row sm:justify-between">
+    <Card className="overflow-hidden premium-card-hover bg-card/90 backdrop-blur-sm dark:border-white/5">
+      <CardHeader className="gap-4 pb-3 sm:flex-row sm:justify-between items-start">
         <div className="flex min-w-0 items-start gap-3">
-          <Avatar className="mt-0.5">
-            <AvatarFallback>{authorName.charAt(0).toUpperCase()}</AvatarFallback>
+          <Avatar className="mt-1 shadow-sm border border-border">
+            <AvatarFallback className="bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">{authorName.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
             <p className="wrap-anywhere text-sm font-medium">{authorName}</p>

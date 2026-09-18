@@ -17,7 +17,7 @@ describe('AdminDashboard', () => {
         totalPosts: 4,
         totalVotes: 16,
         totalComments: 9,
-        statusCounts: { 'under-review': 1, planned: 1, 'in-progress': 1, completed: 1 },
+        statusCounts: { 'under-review': 1, planned: 1, 'in-progress': 1, completed: 1, rejected: 0 },
         topVoted: [{ _id: 'post-1', title: 'Dashboard request', status: 'planned', voteCount: 8, commentCount: 2 }],
         topDiscussed: [{ _id: 'post-2', title: 'Discussion request', status: 'completed', voteCount: 2, commentCount: 7 }],
       },

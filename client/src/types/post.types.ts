@@ -1,4 +1,4 @@
-export type PostStatus = 'under-review' | 'planned' | 'in-progress' | 'completed';
+export type PostStatus = 'under-review' | 'planned' | 'in-progress' | 'completed' | 'rejected';
 export type PostSort = 'newest' | 'most-voted' | 'most-discussed';
 export type PostCategory = 'ui-ux' | 'integrations' | 'performance' | 'general';
 
@@ -57,13 +57,15 @@ export const POST_STATUS_LABELS: Record<PostStatus, string> = {
   planned: 'Planned',
   'in-progress': 'In Progress',
   completed: 'Completed',
+  rejected: 'Rejected',
 };
 
 export const POST_STATUS_TRANSITIONS: Record<PostStatus, PostStatus[]> = {
-  'under-review': ['planned'],
-  planned: ['under-review', 'in-progress'],
-  'in-progress': ['planned', 'completed'],
-  completed: ['in-progress'],
+  'under-review': ['planned', 'in-progress', 'completed', 'rejected'],
+  planned: ['under-review', 'in-progress', 'completed', 'rejected'],
+  'in-progress': ['under-review', 'planned', 'completed', 'rejected'],
+  completed: ['under-review', 'planned', 'in-progress', 'rejected'],
+  rejected: ['under-review', 'planned', 'in-progress', 'completed'],
 };
 
 export interface RoadmapPost {

@@ -103,6 +103,7 @@ export class AdminService {
       planned: 0,
       'in-progress': 0,
       completed: 0,
+      rejected: 0,
     };
 
     for (const group of statusGroups) {

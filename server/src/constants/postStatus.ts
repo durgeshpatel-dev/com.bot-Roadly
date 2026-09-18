@@ -3,15 +3,17 @@ export const POST_STATUSES = [
   'planned',
   'in-progress',
   'completed',
+  'rejected'
 ] as const;
 
 export type PostStatus = (typeof POST_STATUSES)[number];
 
 export const POST_STATUS_TRANSITIONS: Record<PostStatus, readonly PostStatus[]> = {
-  'under-review': ['planned'],
-  planned: ['under-review', 'in-progress'],
-  'in-progress': ['planned', 'completed'],
-  completed: ['in-progress'],
+  'under-review': ['planned', 'in-progress', 'completed', 'rejected'],
+  planned: ['under-review', 'in-progress', 'completed', 'rejected'],
+  'in-progress': ['under-review', 'planned', 'completed', 'rejected'],
+  completed: ['under-review', 'planned', 'in-progress', 'rejected'],
+  rejected: ['under-review', 'planned', 'in-progress', 'completed'],
 };
 
 export const isPostStatusTransitionAllowed = (
