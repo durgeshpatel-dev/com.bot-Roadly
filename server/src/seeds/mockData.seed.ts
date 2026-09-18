@@ -65,7 +65,7 @@ async function seed() {
     // Create users
     let dbUsers = await User.find({ email: { $in: mockUsers.map(u => u.email) } });
     if (dbUsers.length === 0) {
-      dbUsers = await User.insertMany(mockUsers);
+      dbUsers = await User.insertMany(mockUsers as any[]) as any;
       console.log(`Created ${dbUsers.length} mock users`);
     }
 
