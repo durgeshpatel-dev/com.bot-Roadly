@@ -39,7 +39,7 @@ Before you begin, ensure your code is pushed to a repository on your GitHub acco
    - **Name:** roadly-api
    - **Language:** Node
    - **Root Directory:** `server`
-   - **Build Command:** `npm install && npm run build`
+   - **Build Command:** `npm install --include=dev && npm run build`
    - **Start Command:** `npm start`
 5. Scroll down to **Environment Variables** and add the following:
 
