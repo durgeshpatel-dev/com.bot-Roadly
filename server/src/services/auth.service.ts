@@ -5,7 +5,7 @@ import { RefreshToken } from '../models/RefreshToken';
 import { AppError } from '../utils/AppError';
 import { generateRandomToken, hashToken } from '../utils/crypto';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt';
-import { simulateEmail } from '../utils/emailSimulation';
+import { sendEmail } from '../utils/mailer';
 
 const publicUser = (user: IUser) => ({
   _id: user._id.toString(), name: user.name, email: user.email, role: user.role, isVerified: user.isVerified,
@@ -24,7 +24,7 @@ export class AuthService {
       verificationToken: hashToken(verificationToken),
       verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
-    simulateEmail('verify-email', verificationToken);
+    sendEmail('verify-email', verificationToken, email).catch(console.error);
     return publicUser(user);
   }
 
@@ -92,7 +92,7 @@ export class AuthService {
       resetPasswordToken: hashToken(resetToken),
       resetPasswordTokenExpiry: new Date(Date.now() + 60 * 60 * 1000),
     } });
-    if (user) simulateEmail('reset-password', resetToken);
+    if (user) sendEmail('reset-password', resetToken, email).catch(console.error);
     return true;
   }
 

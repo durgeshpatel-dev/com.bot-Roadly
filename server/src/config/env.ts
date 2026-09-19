@@ -19,6 +19,9 @@ export const envSchema = z.object({
   }, 'Use an HTTP(S) origin without a path or trailing slash'),
   COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('strict'),
   TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
+  SMTP_HOST: z.string().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
 }).superRefine((config, context) => {
   if (config.JWT_SECRET === config.JWT_REFRESH_SECRET) {
     context.addIssue({ code: 'custom', path: ['JWT_REFRESH_SECRET'], message: 'Access and refresh secrets must differ' });
