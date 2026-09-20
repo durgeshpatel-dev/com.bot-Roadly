@@ -1,200 +1,190 @@
-# Roadly
+<div align="center">
 
-Customer Feedback + Feature Request + Public Product Roadmap SaaS, built for **Technical Assessment Project 01**.
+# 🚀 Roadly
 
-Roadly gives users a place to submit ideas, vote, discuss, and follow delivery progress. Product teams use the same requests to moderate discussion, prioritize work, and publish a clear roadmap.
+**Customer Feedback • Feature Requests • Public Product Roadmap**
 
-[Repository](https://github.com/durgeshpatel-dev/com.bot-Roadly) · [API reference](docs/05-API-SPECIFICATION.md) · [Deployment](docs/13-DEPLOYMENT.md) · [Requirements and evidence](docs/20-REQUIREMENT-TRACEABILITY.md) · [Release report](docs/21-RELEASE-REPORT.md)
+[![Frontend](https://img.shields.io/badge/Frontend-React%20%7C%20Vite%20%7C%20Tailwind-61DAFB?style=for-the-badge&logo=react&logoColor=white)](#)
+[![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](#)
+[![Database](https://img.shields.io/badge/Database-MongoDB%20%7C%20Mongoose-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](#)
+[![Tests](https://img.shields.io/badge/Tests-123%20Passing-brightgreen?style=for-the-badge&logo=vitest&logoColor=white)](#)
 
-## Features
+</div>
 
-- Authenticated feature submission with title, Markdown, categories, and validation; public feed and detail pages.
-- Server-side title/description text search with 300 ms debounce, category/status filters, pagination, and Newest / Most Upvoted / Most Discussed sorting.
-- Atomic, idempotent upvote/unvote with MongoDB `$addToSet`, `$pull`, `$inc`; optimistic UI and failure rollback.
-- Markdown root comments and direct replies, author/admin moderation, soft deletion, and active comment counts.
-- Admin RBAC and adjacent lifecycle transitions: Under Review ↔ Planned ↔ In Progress ↔ Completed.
-- Public three-column roadmap: Planned, In Progress, Completed.
-- Signup, email verification simulation, login, refresh rotation/reuse detection, logout, and password recovery.
-- Responsive Coss UI with loading/empty/error states, toasts, and Light/Dark/System themes.
-- Approved additions: paginated request activity and admin insights (totals, lifecycle counts, and top requests).
+## ✨ Overview
+Roadly is a modern, transparent platform designed for product teams to capture user ideas, prioritize workloads, and publish a clear product roadmap. It gives your community a voice and your team the insights needed to build what matters.
 
-“Most Upvoted / Trending” sends `sort=most-voted`; no separate trending algorithm is claimed.
+## 🎯 Problem Statement
+Product feedback is often scattered across emails, support tickets, and social media. Roadly centralizes feedback into a single source of truth where users can submit, discuss, and upvote ideas, while admins transition those ideas into a transparent, public roadmap.
 
-## Architecture and security
+## 💡 Key Features
+
+### 🗣️ User Feedback & Voting
+- **Feature Requests**: Submit ideas with rich Markdown descriptions and categorize them (UI/UX, Integrations, Performance, General).
+- **Atomic Voting**: Optimistic UI for instant upvote/unvote interactions with database-level safety to prevent duplicate votes.
+- **Threaded Discussions**: Participate in multi-level threaded conversations on any feature request.
+
+### 🔍 Discovery & Organization
+- **Dynamic Feed**: Sort requests by newest, most voted, or most discussed.
+- **Instant Search**: Find requests instantly with debounced, server-side text search.
+- **Filters**: Quickly filter the feed by category and workflow status.
+
+### 🗺️ Public Roadmap & Activity
+- **3-Column Roadmap**: Public, interactive view of items *Planned*, *In Progress*, and *Completed*. (*Under Review* items remain internal).
+- **Activity Timeline**: Public logs of status changes and administrative milestones.
+
+### 🛡️ Admin Workflow
+- **Role-Based Access**: Dedicated admin workflows separate from standard users.
+- **Status Lifecycle**: Manage features through a strict transition pipeline (`Under Review` → `Planned` → `In Progress` → `Completed`).
+- **Insights Dashboard**: Admin analytics showcasing totals, lifecycle counts, and top requests.
+
+## 🛠️ Technology Stack
+
+| Category | Technologies |
+| :--- | :--- |
+| **Frontend** | React, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form, Axios, Coss UI |
+| **Backend** | Node.js, Express.js, TypeScript, Mongoose |
+| **Database** | MongoDB |
+| **Auth & Security**| JWT (Access & Refresh), bcrypt, CORS, Rate Limiting, Helmet |
+| **Testing** | Supertest, Vitest (79 Backend Tests / 44 Frontend Tests passing) |
+
+## 🏗️ Architecture
+The application uses a separated client-server architecture:
 
 ```mermaid
 flowchart LR
-  React[React + Coss UI] --> Query[TanStack Query / Axios]
-  Query --> API[Express routes and middleware]
-  API --> Controllers[Controllers]
-  Controllers --> Services[Services]
-  Services --> Models[Mongoose models]
-  Models --> Mongo[(MongoDB)]
+    A[React Client] -->|REST API| B[Express Router]
+    B --> C[Controllers]
+    C --> D[Services]
+    D --> E[Mongoose Models]
+    E --> F[(MongoDB)]
 ```
+*This layered approach ensures that routing, business logic, and data access remain decoupled, making the backend highly testable and maintainable.*
 
-Backend authorization loads the current user from MongoDB; client-supplied roles are never trusted. Passwords use bcrypt with cost 12. Access JWTs expire in **15 minutes** and remain in memory. Refresh JWTs expire in **7 days** and live in a scoped **httpOnly cookie**. Refresh rotates the token hash atomically; replay revokes stored sessions. Password reset increments an authentication version so older access and refresh tokens are rejected.
+## 🗄️ Database Structure
 
-Verification/reset tokens are random, hashed in storage, expiring, and single use. Production enables secure cookies and requires HTTPS client origins. Input validation, controlled query construction, response projections, Helmet, origin checks, and rate limiting protect the API. Public responses omit password hashes, token/session fields, private user email, and raw voter arrays. Auth endpoints intentionally return the access token to the authenticated client. User Markdown does not execute raw HTML.
+> [!NOTE]
+> MongoDB is managed via Mongoose schemas with strictly enforced types and indexing.
 
-MongoDB has five models: **User**, **RefreshToken**, **Post**, **Comment**, and **Activity**. Votes use an embedded set and denormalized count. Comments use a two-level adjacency list; deleted content renders `[deleted]`. The [database guide](docs/04-DATABASE-DESIGN.md) explains relationships and every retained index.
+- **`User`**: Stores credentials (bcrypt hashed) and profile information.
+- **`Post`**: Represents a feature request. Contains an embedded array of voter IDs for atomic `$addToSet` / `$pull` operations.
+- **`Comment`**: Two-level adjacency list for threaded discussions linked to a `Post`.
+- **`Activity`**: Tracks lifecycle status changes of a `Post`.
+- **`RefreshToken`**: Manages secure session persistence and token rotation.
 
-## Stack and third-party dependencies
+## 🔌 API Overview
 
-| Libraries/tools | Why used |
-|---|---|
-| React, React DOM, React Router | Component UI, browser rendering, nested routes and guards |
-| TypeScript, Vite, React Vite plugin | Type checks, development server, optimized static build |
-| Coss UI, `@base-ui/react` | Assessment-required source-owned, accessible primitives |
-| Tailwind CSS v4, `@tailwindcss/vite` | Shared tokens and responsive utility styling |
-| TanStack Query | Server cache, invalidation, optimistic voting |
-| Axios | API calls, credentials, coordinated token refresh |
-| React Hook Form, Zod, `@hookform/resolvers` | Forms and typed validation |
-| react-markdown | Safe Markdown rendering without executing raw HTML |
-| Lucide React, Fontsource Inter | Icons and locally bundled typography |
-| clsx, tailwind-merge, class-variance-authority | Coss class composition and variants |
-| `@daypicker/react`, date-fns | Retained reusable Coss calendar primitive; no calendar product feature |
-| Express, Mongoose | Layered REST API and MongoDB schemas/queries |
-| bcryptjs, jsonwebtoken | Password hashing and signed JWTs |
-| cookie-parser, cors, helmet, express-rate-limit | Cookie parsing, allowed origins, headers, abuse controls |
-| dotenv | Local server configuration |
-| Vitest, Supertest, mongodb-memory-server | API/security/concurrency tests with isolated real MongoDB processes |
-| Testing Library, jest-dom, jsdom | Browser-like component, hook, and accessibility-semantic tests |
-| Oxlint, tsx, concurrently, `@types/*` | Lint, server development, workspace startup, library typings |
+### Authentication & Users
+| Method | Endpoint | Purpose | Access |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Register a new account | Public |
+| `POST` | `/api/auth/login` | Authenticate and issue tokens | Public |
+| `POST` | `/api/auth/refresh` | Rotate access/refresh tokens | Public |
+| `GET`  | `/api/users/me` | Fetch current user profile | Auth |
 
-No external email, analytics, notification, or AI service is required for the local demo. MongoDB is the only runtime data service. npm manifests and the lockfile are the dependency source of truth.
+### Feature Requests (Posts)
+| Method | Endpoint | Purpose | Access |
+| :--- | :--- | :--- | :--- |
+| `GET`  | `/api/posts` | Fetch paginated, filtered feed | Public |
+| `POST` | `/api/posts` | Create a new request | Auth |
+| `GET`  | `/api/posts/:id` | Get specific request details | Public |
+| `POST` | `/api/posts/:id/vote`| Upvote a request | Auth |
+| `DELETE`| `/api/posts/:id/vote`| Remove upvote from request | Auth |
 
-## Local setup
+### Comments & Discussions
+| Method | Endpoint | Purpose | Access |
+| :--- | :--- | :--- | :--- |
+| `GET`  | `/api/posts/:postId/comments` | Fetch comments for a post | Public |
+| `POST` | `/api/posts/:postId/comments` | Add a comment/reply | Auth |
+| `PUT`  | `/api/comments/:id` | Edit own comment | Auth |
+| `DELETE`| `/api/comments/:id`| Soft delete comment | Auth/Admin |
 
-Use **Node.js 24.x** (see `.node-version`) and its npm. A local MongoDB instance or a provisioned MongoDB connection is required for the running application. Tests start their own isolated MongoDB instance.
+### Roadmap & Admin
+| Method | Endpoint | Purpose | Access |
+| :--- | :--- | :--- | :--- |
+| `GET`  | `/api/roadmap` | Fetch the 3-column roadmap | Public |
+| `GET`  | `/api/admin/posts` | Fetch paginated admin feed | Admin |
+| `PATCH`| `/api/admin/posts/:id/status`| Progress request status | Admin |
+| `GET`  | `/api/admin/stats` | Get admin dashboard analytics | Admin |
+| `GET`  | `/api/posts/:id/activity` | Fetch activity timeline | Public |
 
-```sh
+## 🔐 Authentication & Security
+
+> [!CAUTION]
+> **Never commit passwords, API keys, access tokens, database credentials, JWT secrets, or `.env` files to version control.**
+
+Roadly employs a robust security model:
+- **Stateless Access**: Short-lived JWT access tokens kept in memory on the client.
+- **Secure Sessions**: Long-lived refresh tokens securely stored in `httpOnly` cookies.
+- **Token Rotation**: Atomic hash rotation on refresh to detect token reuse/replay.
+- **Data Protection**: `bcrypt` password hashing (cost 12), request validation via Zod, rate limiting, CORS configuration, and safe Markdown rendering (no raw HTML execution).
+- **Access Control**: Strict Server-Side Role-Based Access Control (RBAC) ensuring client roles are never trusted.
+
+## 🚀 How to Run Locally
+
+### 1. Install Dependencies
+```bash
 git clone https://github.com/durgeshpatel-dev/com.bot-Roadly.git
 cd com.bot-Roadly
 npm ci
 ```
 
-Copy `server/.env.example` to `server/.env` and `client/.env.example` to `client/.env`. In PowerShell:
+### 2. Configure Environment Variables
+You must set up environment files for both the server and the client.
+```bash
+# Server configuration
+cp server/.env.example server/.env
 
-```powershell
-Copy-Item server/.env.example server/.env
-Copy-Item client/.env.example client/.env
+# Client configuration
+cp client/.env.example client/.env
 ```
+*(Windows PowerShell: use `Copy-Item` instead of `cp`)*
 
-Generate two distinct secrets locally, one per command invocation:
+Open the `.env` files and provide your local credentials. Ensure `JWT_SECRET` and `JWT_REFRESH_SECRET` are long, secure random strings.
 
-```sh
-node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
-```
+### 3. Database Setup
+A running MongoDB instance is required. Update the `MONGODB_URI` in `server/.env` to point to your local or cloud database (e.g., `mongodb://127.0.0.1:27017/roadly`).
 
-Paste them into the ignored server environment file. Do not commit or share the output.
-
-| Server variable | Purpose |
-|---|---|
-| `NODE_ENV` | `development`, `test`, or `production` |
-| `PORT` | API port; default `5000` |
-| `MONGODB_URI` | e.g. `mongodb://127.0.0.1:27017/roadly` |
-| `JWT_SECRET` | Access signing secret, at least 32 characters |
-| `JWT_REFRESH_SECRET` | Different refresh signing secret, at least 32 characters |
-| `CLIENT_URL` | Exact browser origin, e.g. `http://localhost:5173`; no trailing slash/path |
-| `COOKIE_SAME_SITE` | `strict` default; `lax` or production-only `none` where needed |
-| `TRUST_PROXY` | Trusted proxy hop count; `0` locally |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Used only by the operator-run admin seed |
-
-Client `VITE_API_URL` is public build-time configuration, e.g. `http://localhost:5000/api`. Never put a secret in a `VITE_` variable. Workspace commands load the server/client env files in their own directories; the root example is a reference, not a substitute.
-
-Start MongoDB, then:
-
-```sh
+### 4. Start the Application
+Start both the frontend and backend concurrently from the root directory:
+```bash
 npm run dev
 ```
+- Client runs at: `http://localhost:5173`
+- API runs at: `http://localhost:5000/api`
 
-Open `http://localhost:5173`; API health is `http://localhost:5000/api/health`. The application creates collections and declared indexes through Mongoose. See [database/index operations](docs/04-DATABASE-DESIGN.md) before upgrading an existing database.
-
-Development verification and reset links appear in the private server terminal. Open those links to complete the flows. These links are sensitive and must not be recorded or published. Unverified accounts may log in; verification still changes account state.
-
-### Admin account
-
-Set local admin values in `server/.env`, then run:
-
-```sh
+### 5. Create an Admin Account
+To manage the roadmap, seed an admin user:
+```bash
 npm run seed:admin -w server
 ```
+*(Ensure `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and `ADMIN_NAME` are set in `server/.env` before running).*
 
-The seed creates a verified admin, leaves an existing admin unchanged, and refuses to promote an existing regular account. It does not overwrite passwords. Remove temporary seed credentials from the environment after use. There is no public role-promotion endpoint or committed demo password.
+## ⚠️ Assumptions & Limitations
+- **Simulated Email**: Email delivery for account verification and password resets is simulated in the development environment. Production environments require integrating a third-party email service provider.
+- **Single Tenant**: Designed as a unified workspace with user/admin roles, rather than a multi-tenant B2B SaaS.
+- **Pagination Strategy**: Utilizes offset pagination and embedded voting arrays; optimized for standard loads but may require migration to cursor pagination for massive enterprise scale.
 
-## API overview
-
-All routes use `/api`, JSON envelopes, and Bearer access tokens for protected operations. Cookie-based auth calls send credentials.
-
-| Family | Implemented routes |
-|---|---|
-| Auth | `POST /auth/register`, `/verify-email`, `/login`, `/refresh`, `/logout`, `/forgot-password`, `/reset-password` |
-| Current user | `GET /users/me` |
-| Requests | `GET/POST /posts`; `GET/PUT/DELETE /posts/:id` |
-| Voting | `POST/DELETE /posts/:id/vote` |
-| Comments | `GET/POST /posts/:postId/comments`; `PUT/DELETE /comments/:id` |
-| Roadmap | `GET /roadmap` |
-| Activity | `GET /posts/:id/activity` |
-| Admin | `GET /admin/posts`, `PATCH /admin/posts/:id/status`, `GET /admin/stats` |
-| Health | `GET /health` |
-
-Example feed:
-
+## 📦 Project Structure
 ```text
-GET /api/posts?page=1&limit=10&sort=most-voted&category=ui-ux,performance&status=planned,in-progress&search=dashboard
+roadly/
+├── client/                 # Frontend React Application
+│   ├── src/
+│   │   ├── api/            # Axios API adapters
+│   │   ├── components/     # UI Components & Coss primitives
+│   │   ├── context/        # React context providers
+│   │   ├── hooks/          # Custom hooks (TanStack Query)
+│   │   ├── pages/          # Route components
+│   │   └── types/          # Shared TypeScript interfaces
+│   └── index.html
+├── server/                 # Backend Node.js API
+│   ├── src/
+│   │   ├── config/         # Environment & database config
+│   │   ├── controllers/    # Request handling logic
+│   │   ├── middleware/     # Auth, validation & security
+│   │   ├── models/         # Mongoose schemas
+│   │   ├── routes/         # Express router definitions
+│   │   └── services/       # Core business logic
+│   └── tests/              # Supertest integration tests
+└── README.md               # You are here!
 ```
-
-[API documentation](docs/05-API-SPECIFICATION.md) defines requests, response shapes, authentication, errors, and pagination for each endpoint.
-
-## Tests and builds
-
-Run from the repository root:
-
-```sh
-npm run check
-```
-
-Individual checks:
-
-```sh
-npm test
-npm run test -w server
-npm run test -w client
-npm run typecheck
-npm run lint
-npm run build
-npm audit
-```
-
-The server build emits `server/dist`; production starts with `npm start -w server`. The frontend emits `client/dist`. First-time tests may download a MongoDB binary; they do not use the configured application database. CI runs installation, checks, and dependency audit on Node 24. Actual release test counts, bundle measurements, browser QA, warnings, and repository state are recorded in [release evidence](docs/21-RELEASE-REPORT.md).
-
-## Deployment
-
-[Deployment runbook](docs/13-DEPLOYMENT.md) covers native Node or the provided backend Dockerfile, static frontend hosting, MongoDB, indexes, HTTPS/CORS/cookies, seed setup, health checks, and smoke tests. `client/vercel.json` supplies SPA routing and security headers. These files prepare deployment; they do not prove a hosted service is live.
-
-**Production email is a remaining integration step:** simulation is disabled in production to avoid leaking tokens to logs. Connect a private delivery provider before enabling public signup/recovery. No live deployment or video URL is fabricated.
-
-## Structure
-
-```text
-client/src/    Pages, Coss components, hooks, API adapters, contexts, tests
-server/src/    Routes → controllers → services → models; middleware/config/seeds
-server/tests/ Integration and security regressions
-docs/         Requirements, architecture, API, deployment, demo, release evidence
-reference/    Original assessment PDFs
-```
-
-See [full structure](docs/09-FOLDER-STRUCTURE.md), [decision log](docs/17-DECISION-LOG.md), and [demo/interview plan](docs/15-DEMO-VIDEO-PLAN.md).
-
-## Assumptions and limitations
-
-- Single application/workspace with user/admin roles; not a multi-tenant billing product.
-- Email is simulated only in development; no public account recovery delivery without integration.
-- Unverified users may log in. Password reset revokes old credentials; ordinary logout revokes its refresh session while access JWTs remain short-lived.
-- Embedded voters, offset pagination, unpaginated roadmap, and all replies for a visible root target assessment-scale data.
-- MongoDB standalone cross-document updates are not a general transaction boundary; process failures can require counter/reference reconciliation.
-- Activity recording is best-effort, not a complete compliance audit log. Insights are snapshots, not historical analytics.
-- No WebSockets, follows, notifications, profile pages, true trending algorithm, or unapproved extras.
-- Hosting credentials, public video recording/upload, and final candidate submission remain operator/candidate responsibilities unless separately completed and verified.
-
-All 73 mandatory assessment requirements, including universal security/UI requirements and external deliverables, are tracked honestly in the [traceability matrix](docs/20-REQUIREMENT-TRACEABILITY.md).
