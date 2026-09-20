@@ -19,13 +19,11 @@ const expiresAt = () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 export class AuthService {
   static async register({ name, email, password }: { name: string; email: string; password: string }) {
     if (await User.exists({ email })) throw new AppError('Email already registered', 409);
-    const verificationToken = generateRandomToken();
+    // Since email verification is removed, we instantly mark the user as verified.
     const user = await User.create({
       name, email, password,
-      verificationToken: hashToken(verificationToken),
-      verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      isVerified: true,
     });
-    sendEmail('verify-email', verificationToken, email).catch(console.error);
     return publicUser(user);
   }
 

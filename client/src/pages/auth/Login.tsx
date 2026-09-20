@@ -87,12 +87,20 @@ export default function Login() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{' '}
-          <Link to="/signup" className="font-semibold text-primary hover:underline">
-            Sign up
-          </Link>
-        </p>
+        <div className="space-y-3">
+          <p className="text-center text-sm text-muted-foreground">
+            Don't have an account?{' '}
+            <Link to="/signup" className="font-semibold text-primary hover:underline">
+              Sign up
+            </Link>
+          </p>
+          <p className="text-center text-sm text-muted-foreground">
+            Admin access?{' '}
+            <Link to="/admin/login" className="font-medium text-violet-500 hover:text-violet-400 hover:underline">
+              Sign in here
+            </Link>
+          </p>
+        </div>
     </AuthPanel>
   );
 }

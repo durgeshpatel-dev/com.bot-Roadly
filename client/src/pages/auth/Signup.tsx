@@ -1,16 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { apiErrorMessage } from '../../lib/api-error';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Alert } from '../../components/ui/alert';
 import { AuthPanel } from '../../components/auth/AuthPanel';
-import { CheckCircle2 } from 'lucide-react';
 
 const signupSchema = z
   .object({
@@ -28,40 +27,44 @@ type SignupValues = z.infer<typeof signupSchema>;
 
 export default function Signup() {
   const { signup } = useAuth();
+  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
   });
 
+  const passwordValue = watch('password', '');
+
+  const passwordStrength = useMemo(() => {
+    if (!passwordValue) return { score: 0, label: '', color: 'bg-slate-200' };
+    let score = 0;
+    if (passwordValue.length >= 8) score += 1;
+    if (/[A-Z]/.test(passwordValue)) score += 1;
+    if (/[0-9]/.test(passwordValue)) score += 1;
+    if (/[^A-Za-z0-9]/.test(passwordValue)) score += 1;
+
+    if (score <= 1) return { score, label: 'Weak', color: 'bg-destructive' };
+    if (score === 2) return { score, label: 'Fair', color: 'bg-warning' };
+    if (score === 3) return { score, label: 'Good', color: 'bg-success/70' };
+    return { score, label: 'Strong', color: 'bg-success' };
+  }, [passwordValue]);
+
   const onSubmit = async (data: SignupValues) => {
     try {
       setError(null);
       await signup({ name: data.name, email: data.email, password: data.password });
-      setSuccess(true);
+      // Go directly to login upon successful registration
+      navigate('/login', { state: { message: 'Registration successful! Please sign in.' } });
     } catch (err: unknown) {
       setError(apiErrorMessage(err, 'Failed to sign up'));
     }
   };
-
-  if (success) {
-    return (
-      <AuthPanel title="Registration successful">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-lg border bg-success/8 text-success-foreground">
-            <CheckCircle2 aria-hidden="true" />
-          </div>
-          <p className="text-center text-muted-foreground">
-            Please check your email (or server console) for the verification link.
-          </p>
-          <Button className="w-full" render={<Link to="/login" />}>Return to login</Button>
-      </AuthPanel>
-    );
-  }
 
   return (
     <AuthPanel title="Create an account" description="Join Roadly to submit, vote, and discuss feature requests.">
@@ -99,6 +102,20 @@ export default function Signup() {
                 autoComplete="new-password"
                 aria-invalid={!!errors.password} aria-describedby={errors.password ? 'password-error' : undefined} {...register('password')}
               />
+              {passwordValue && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex h-1 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div 
+                      className={`h-full transition-all duration-300 ${passwordStrength.color}`} 
+                      style={{ width: `${(passwordStrength.score / 4) * 100}%` }} 
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{passwordStrength.label}</span>
+                    <span>Includes: A-Z, 0-9, !@#</span>
+                  </div>
+                </div>
+              )}
               {errors.password && <p id="password-error" role="alert" className="text-sm text-destructive">{errors.password.message}</p>}
             </div>
 
@@ -121,12 +138,20 @@ export default function Signup() {
           </Button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-primary hover:underline">
-            Sign in
-          </Link>
-        </p>
+        <div className="space-y-3">
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link to="/login" className="font-semibold text-primary hover:underline">
+              Sign in
+            </Link>
+          </p>
+          <p className="text-center text-sm text-muted-foreground">
+            Need an admin account?{' '}
+            <Link to="/admin/signup" className="font-medium text-violet-500 hover:text-violet-400 hover:underline">
+              Register here
+            </Link>
+          </p>
+        </div>
     </AuthPanel>
   );
 }
