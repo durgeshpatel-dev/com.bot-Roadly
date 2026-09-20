@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
-import { registerSchema, loginSchema, verifyEmailSchema, forgotPasswordSchema, resetPasswordSchema } from '../middleware/validations/auth.validation';
+import { registerSchema, loginSchema, verifyEmailSchema, forgotPasswordSchema, resetPasswordSchema, adminRegisterSchema } from '../middleware/validations/auth.validation';
 import { validate } from '../middleware/validate';
 import { trustedAuthOrigin } from '../middleware/trustedAuthOrigin';
 import { registrationLimiter, loginLimiter, recoveryLimiter, tokenActionLimiter, refreshLimiter } from '../middleware/rateLimiter';
@@ -15,6 +15,7 @@ router.post('/login', loginLimiter, validate(loginSchema), AuthController.login)
 router.post('/refresh', refreshLimiter, AuthController.refresh);
 router.post('/forgot-password', recoveryLimiter, validate(forgotPasswordSchema), AuthController.forgotPassword);
 router.post('/reset-password', tokenActionLimiter, validate(resetPasswordSchema), AuthController.resetPassword);
+router.post('/admin-register', registrationLimiter, validate(adminRegisterSchema), AuthController.registerAdmin);
 
 // Refresh-cookie logout must also work after the access token has expired.
 router.post('/logout', refreshLimiter, AuthController.logout);

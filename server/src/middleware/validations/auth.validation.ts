@@ -22,3 +22,9 @@ export const forgotPasswordSchema = z.object({ email });
 export const resetPasswordSchema = z.object({
   token, password, confirmPassword: z.string().optional(),
 }).refine(confirmationMatches, { message: 'Passwords must match', path: ['confirmPassword'] });
+
+export const adminRegisterSchema = z.object({
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(50),
+  email, password, confirmPassword: z.string().optional(),
+  adminSecret: z.string().min(1, 'Admin secret is required'),
+}).refine(confirmationMatches, { message: 'Passwords must match', path: ['confirmPassword'] });

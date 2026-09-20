@@ -22,6 +22,7 @@ export const envSchema = z.object({
   SMTP_HOST: z.string().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
+  ADMIN_SECRET: z.string().min(16, 'Admin secret must be at least 16 characters').optional(),
 }).superRefine((config, context) => {
   if (config.JWT_SECRET === config.JWT_REFRESH_SECRET) {
     context.addIssue({ code: 'custom', path: ['JWT_REFRESH_SECRET'], message: 'Access and refresh secrets must differ' });

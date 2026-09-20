@@ -83,4 +83,12 @@ export class AuthController {
       message: 'Password reset successful',
     });
   });
+
+  static registerAdmin = catchAsync(async (req: Request, res: Response) => {
+    const user = await AuthService.registerAdmin(req.body);
+    sendSuccess(res, 201, {
+      user,
+      message: 'Admin account created successfully.',
+    });
+  });
 }

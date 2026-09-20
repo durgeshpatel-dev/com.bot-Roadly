@@ -6,6 +6,7 @@ import { AppError } from '../utils/AppError';
 import { generateRandomToken, hashToken } from '../utils/crypto';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { sendEmail } from '../utils/mailer';
+import { env } from '../config/env';
 
 const publicUser = (user: IUser) => ({
   _id: user._id.toString(), name: user.name, email: user.email, role: user.role, isVerified: user.isVerified,
@@ -108,5 +109,17 @@ export class AuthService {
     if (!user) throw new AppError('Invalid or expired token', 400);
     await RefreshToken.updateMany({ user: user._id }, { $set: { isRevoked: true } });
     return true;
+  }
+
+  static async registerAdmin({ name, email, password, adminSecret }: { name: string; email: string; password: string; adminSecret: string }) {
+    if (!env.ADMIN_SECRET) throw new AppError('Admin registration is not configured', 503);
+    if (adminSecret !== env.ADMIN_SECRET) throw new AppError('Invalid admin secret key', 403);
+    if (await User.exists({ email })) throw new AppError('Email already registered', 409);
+    const user = await User.create({
+      name, email, password,
+      role: 'admin',
+      isVerified: true,
+    });
+    return publicUser(user);
   }
 }

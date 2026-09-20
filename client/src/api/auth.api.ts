@@ -29,4 +29,5 @@ export const authApi = {
   forgotPassword: (email: string) => apiClient.post('/auth/forgot-password', { email }),
   resetPassword: (data: ResetPasswordInput) => apiClient.post('/auth/reset-password', data),
   getMe: () => apiClient.get<SuccessResponse<AuthResponse>>('/users/me'),
+  adminRegister: (data: SignupInput & { adminSecret: string }) => apiClient.post<SuccessResponse<AuthResponse>>('/auth/admin-register', data),
 };

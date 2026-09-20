@@ -16,6 +16,8 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const RoadmapPage = lazy(() => import('./pages/RoadmapPage'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminPostsPage = lazy(() => import('./pages/admin/AdminPostsPage'));
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
+const AdminSignup = lazy(() => import('./pages/admin/AdminSignup'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Signup = lazy(() => import('./pages/auth/Signup'));
 const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail'));
@@ -54,6 +56,8 @@ function AppContent() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/signup" element={<AdminSignup />} />
           </Route>
 
           <Route path="/verify-email" element={<VerifyEmail />} />
