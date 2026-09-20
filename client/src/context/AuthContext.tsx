@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetIdentityCache = useCallback(() => {
     queryClient.removeQueries({ queryKey: ['admin'] });
-    void queryClient.resetQueries({ predicate: ({ queryKey }) => ['posts', 'post', 'roadmap'].includes(String(queryKey[0])) });
+    queryClient.resetQueries({ predicate: ({ queryKey }) => ['posts', 'post', 'roadmap'].includes(String(queryKey[0])) }).catch(() => {});
   }, [queryClient]);
 
   const checkAuth = useCallback(() => {

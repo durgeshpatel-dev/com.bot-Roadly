@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiErrorMessage } from '../../lib/api-error';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -34,8 +35,8 @@ export default function ForgotPassword() {
       setError(null);
       await authApi.forgotPassword(data.email);
       setSuccess(true);
-    } catch {
-      setError('An error occurred while requesting the password reset.');
+    } catch (err: unknown) {
+      setError(apiErrorMessage(err, 'An error occurred while requesting the password reset.'));
     }
   };
 

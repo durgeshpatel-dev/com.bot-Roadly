@@ -61,10 +61,10 @@ export const useVote = () => {
   };
 
   const invalidate = (postId: string) => {
-    void queryClient.invalidateQueries({ queryKey: ['post', postId] });
+    queryClient.invalidateQueries({ queryKey: ['post', postId] }).catch(() => {});
     // Refetch shared lists after the last pending vote, avoiding optimistic flicker.
     if (queryClient.isMutating({ mutationKey: ['vote'] }) === 1) {
-      for (const queryKey of [['posts'], ['roadmap'], ['admin']]) void queryClient.invalidateQueries({ queryKey });
+      for (const queryKey of [['posts'], ['roadmap'], ['admin']]) queryClient.invalidateQueries({ queryKey }).catch(() => {});
     }
   };
 
